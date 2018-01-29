@@ -5,7 +5,7 @@ import { convertFromRaw, convertToRaw } from 'draft-js'
 export const convertRawToHTML = (content, fontFamilies = []) => {
   try {
     const contentState = convertFromRaw(content)
-    return convertToHTML(getToHTMLConfig({ contentState, fontFamilies }))
+    return convertToHTML(getToHTMLConfig({ contentState, fontFamilies }))(contentState)
   } catch (error) {
     return ''
   }
