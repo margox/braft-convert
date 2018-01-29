@@ -1,0 +1,34 @@
+{
+  "name": "braft-convert",
+  "version": "1.0.1",
+  "description": "A convert helper for Braft Editor.",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "babel src -d lib",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublish": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/margox/braft-convert.git"
+  },
+  "keywords": [
+    "convert",
+    "braft"
+  ],
+  "author": "Margox",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/margox/braft-convert/issues"
+  },
+  "homepage": "https://github.com/margox/braft-convert#readme",
+  "dependencies": {
+    "draft-convert": "^2.0.1",
+    "draft-js": "^0.10.5"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.24.1"
+  }
+}
