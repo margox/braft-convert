@@ -305,25 +305,26 @@ var blockToHTML = function blockToHTML(contentState) {
       var nextBlock = contentState.getBlockAfter(block.key);
       var previousBlockType = previousBlock && previousBlock.getType();
       var nextBlockType = nextBlock && nextBlock.getType();
+      var codeBreakLine = block.text ? '' : '<br>';
 
       if (previousBlockType === 'code-block' && nextBlockType === 'code-block') {
         return {
-          start: "<code" + blockStyle + "><div>",
+          start: "<code><div>" + codeBreakLine,
           end: '</div></code>'
         };
       } else if (previousBlockType === 'code-block') {
         return {
-          start: "<code" + blockStyle + "><div>",
+          start: "<code><div>" + codeBreakLine,
           end: '</div></code></pre>'
         };
       } else if (nextBlockType === 'code-block') {
         return {
-          start: "<pre><code" + blockStyle + "><div>",
+          start: "<pre><code><div>" + codeBreakLine,
           end: '</div></code>'
         };
       } else {
         return {
-          start: "<pre><code" + blockStyle + "><div>",
+          start: "<pre><code><div>" + codeBreakLine,
           end: '</div></code></pre>'
         };
       }
