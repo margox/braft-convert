@@ -203,14 +203,14 @@ const convertAtomicBlock = (block, contentState) => {
       return (
         <div className="media-wrap image-wrap" style={imageWrapStyle}>
           <a style={{display:'inline-block'}} href={link} target={link_target}>
-            <img src={url} width={width} height={height} />
+            <img src={url} width={width} height={height} style={{width, height}}/>
           </a>
         </div>
       )
     } else {
       return (
         <div className="media-wrap image-wrap" style={imageWrapStyle}>
-          <img src={url} width={width} height={height} />
+          <img src={url} width={width} height={height} style={{width, height}}/>
         </div>
       )
     }

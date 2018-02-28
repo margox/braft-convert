@@ -230,14 +230,14 @@ var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
         _react2.default.createElement(
           "a",
           { style: { display: 'inline-block' }, href: link, target: link_target },
-          _react2.default.createElement("img", { src: url, width: width, height: height })
+          _react2.default.createElement("img", { src: url, width: width, height: height, style: { width: width, height: height } })
         )
       );
     } else {
       return _react2.default.createElement(
         "div",
         { className: "media-wrap image-wrap", style: imageWrapStyle },
-        _react2.default.createElement("img", { src: url, width: width, height: height })
+        _react2.default.createElement("img", { src: url, width: width, height: height, style: { width: width, height: height } })
       );
     }
   } else if (mediaType === 'audio') {
