@@ -274,6 +274,8 @@ var styleToHTML = function styleToHTML(props) {
       return _react2.default.createElement("span", { style: { backgroundColor: '#' + style.split('-')[1] } });
     } else if (style.indexOf('fontsize-') === 0) {
       return _react2.default.createElement("span", { style: { fontSize: style.split('-')[1] + 'px' } });
+    } else if (style.indexOf('lineheight-') === 0) {
+      return _react2.default.createElement("span", { style: { lineHeight: style.split('-')[1] } });
     } else if (style.indexOf('fontfamily-') === 0) {
       var fontFamily = props.fontFamilies.find(function (item) {
         return item.name.toLowerCase() === style.split('-')[1];
@@ -400,6 +402,8 @@ var htmlToStyle = function htmlToStyle(nodeName, node, currentStyle) {
     return currentStyle.add('SUBSCRIPT');
   } else if (nodeName === 'span' && node.style.fontSize) {
     return currentStyle.add('FONTSIZE-' + parseInt(node.style.fontSize, 10));
+  } else if (nodeName === 'span' && node.style.lineHeight) {
+    return currentStyle.add('LINEHEIGHT-' + node.style.lineHeight);
   } else if (nodeName === 'span' && node.style.textDecoration === 'line-through') {
     return currentStyle.add('STRIKETHROUGH');
   } else {
