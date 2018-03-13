@@ -1,6 +1,6 @@
 {
   "name": "braft-convert",
-  "version": "1.2.0",
+  "version": "1.7.0",
   "description": "A convert helper for Braft Editor.",
   "main": "dist/index.js",
   "scripts": {

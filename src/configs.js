@@ -203,7 +203,7 @@ const convertAtomicBlock = (block, contentState) => {
       return (
         <div className="media-wrap image-wrap" style={imageWrapStyle}>
           <a style={{display:'inline-block'}} href={link} target={link_target}>
-            <img src={url} width={width} height={height} style={{width, height}}/>
+            <img src={url} width={width} height={height} style={{width, height}} />
           </a>
         </div>
       )
@@ -219,6 +219,8 @@ const convertAtomicBlock = (block, contentState) => {
     return <div className="media-wrap audio-wrap"><audio controls src={url} /></div>
   } else if (mediaType === 'video') {
     return <div className="media-wrap video-wrap"><video controls src={url} width={width} height={height} /></div>
+  } else if (mediaType === 'hr') {
+    return <hr></hr>
   } else {
     return <p></p>
   }
@@ -243,9 +245,14 @@ const styleToHTML = (props) => (style) => {
     return <span style={{fontSize: style.split('-')[1] + 'px'}}/>
   } else if (style.indexOf('lineheight-') === 0) {
     return <span style={{lineHeight: style.split('-')[1]}}/> 
+  } else if (style.indexOf('letterspacing-') === 0) {
+    return <span style={{ letterSpacing: style.split('-')[1] + 'px'}} />
+  } else if (style.indexOf('indent-') === 0) {
+    return <span style={{ paddingLeft: style.split('-')[1] + 'px', paddingRight: style.split('-')[1] + 'px' }} />
   } else if (style.indexOf('fontfamily-') === 0) {
     let fontFamily = props.fontFamilies.find((item) => item.name.toLowerCase() === style.split('-')[1])
-    return <span style={{fontFamily: fontFamily.family}}/> 
+    if (!fontFamily) return
+    return <span style={{fontFamily: fontFamily.family}}/>
   }
 
 }
@@ -332,17 +339,7 @@ const entityToHTML = (entity, originalText) => {
 
 }
 
-export const getToHTMLConfig = (props) => {
-
-  return {
-    styleToHTML: styleToHTML(props),
-    entityToHTML: entityToHTML,
-    blockToHTML: blockToHTML(props.contentState)
-  }
-
-}
-
-const htmlToStyle = (nodeName, node, currentStyle) => {
+const htmlToStyle = (props) => (nodeName, node, currentStyle) => {
 
   if (nodeName === 'span' && node.style.color) {
     let color = getHexColor(node.style.color)
@@ -358,8 +355,16 @@ const htmlToStyle = (nodeName, node, currentStyle) => {
     return currentStyle.add('FONTSIZE-' + parseInt(node.style.fontSize, 10))
   } else if (nodeName === 'span' && node.style.lineHeight) {
     return currentStyle.add('LINEHEIGHT-' + node.style.lineHeight)
+  } else if (nodeName === 'span' && node.style.letterSpacing) {
+    return currentStyle.add('LETTERSPACING-' + parseInt(node.style.letterSpacing, 10))
+  } else if (nodeName === 'span' && node.style.indent) {
+    return currentStyle.add('INDENT-' + parseInt(node.style.indent, 10))
   } else if (nodeName === 'span' && node.style.textDecoration === 'line-through') {
     return currentStyle.add('STRIKETHROUGH')
+  } else if (nodeName === 'span' && node.style.fontFamily) {
+    let fontFamily = props.fontFamilies.find((item) => item.family.toLowerCase() === node.style.fontFamily.toLowerCase())
+    if (!fontFamily) return currentStyle
+    return currentStyle.add('FONTFAMILY-' + fontFamily.name.toUpperCase())
   } else {
     return currentStyle
   }
@@ -369,10 +374,8 @@ const htmlToStyle = (nodeName, node, currentStyle) => {
 const htmlToEntity = (nodeName, node, createEntity) => {
 
   if (nodeName === 'a' && !node.querySelectorAll('img').length) {
-
     let { href, target } = node
     return createEntity('LINK', 'MUTABLE',{ href, target })
-
   } else if (nodeName === 'audio') {
     return createEntity('AUDIO', 'IMMUTABLE',{ url: node.src }) 
   } else if (nodeName === 'video') {
@@ -380,9 +383,10 @@ const htmlToEntity = (nodeName, node, createEntity) => {
   } else if (nodeName === 'img') {
 
     let parentNode = node.parentNode
-    let { src:url, width, height } = node
+    let { src: url, width, height } = node
     width = width || 'auto'
     height = height || 'auto'
+
     let entityData = { url, width, height }
 
     if (parentNode.nodeName.toLowerCase() === 'a') {
@@ -392,6 +396,8 @@ const htmlToEntity = (nodeName, node, createEntity) => {
 
     return createEntity('IMAGE', 'IMMUTABLE', entityData) 
 
+  } else if (nodeName === 'hr') {
+    return createEntity('HR', 'IMMUTABLE', {}) 
   }
 
 }
@@ -420,6 +426,13 @@ const htmlToBlock = (nodeName, node) => {
       }
     }
 
+  } else if (nodeName === 'hr') {
+
+    return {
+      type: 'atomic',
+      data: {}
+    }
+
   } else if (nodeName === 'p' && nodeStyle.textAlign) {
 
     return {
@@ -434,5 +447,21 @@ const htmlToBlock = (nodeName, node) => {
 }
 
 export const getFromHTMLConfig = (props) => {
-  return { htmlToStyle, htmlToEntity, htmlToBlock }
+
+  return { 
+    htmlToStyle: htmlToStyle(props),
+    htmlToEntity,
+    htmlToBlock 
+  }
+
+}
+
+export const getToHTMLConfig = (props) => {
+
+  return {
+    styleToHTML: styleToHTML(props),
+    entityToHTML: entityToHTML,
+    blockToHTML: blockToHTML(props.contentState)
+  }
+
 }

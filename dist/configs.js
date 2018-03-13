@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getFromHTMLConfig = exports.getToHTMLConfig = exports.blocks = exports.getHexColor = undefined;
+exports.getToHTMLConfig = exports.getFromHTMLConfig = exports.blocks = exports.getHexColor = undefined;
 
 var _react = require("react");
 
@@ -252,6 +252,8 @@ var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
       { className: "media-wrap video-wrap" },
       _react2.default.createElement("video", { controls: true, src: url, width: width, height: height })
     );
+  } else if (mediaType === 'hr') {
+    return _react2.default.createElement("hr", null);
   } else {
     return _react2.default.createElement("p", null);
   }
@@ -276,10 +278,15 @@ var styleToHTML = function styleToHTML(props) {
       return _react2.default.createElement("span", { style: { fontSize: style.split('-')[1] + 'px' } });
     } else if (style.indexOf('lineheight-') === 0) {
       return _react2.default.createElement("span", { style: { lineHeight: style.split('-')[1] } });
+    } else if (style.indexOf('letterspacing-') === 0) {
+      return _react2.default.createElement("span", { style: { letterSpacing: style.split('-')[1] + 'px' } });
+    } else if (style.indexOf('indent-') === 0) {
+      return _react2.default.createElement("span", { style: { paddingLeft: style.split('-')[1] + 'px', paddingRight: style.split('-')[1] + 'px' } });
     } else if (style.indexOf('fontfamily-') === 0) {
       var fontFamily = props.fontFamilies.find(function (item) {
         return item.name.toLowerCase() === style.split('-')[1];
       });
+      if (!fontFamily) return;
       return _react2.default.createElement("span", { style: { fontFamily: fontFamily.family } });
     }
   };
@@ -379,36 +386,39 @@ var entityToHTML = function entityToHTML(entity, originalText) {
   }
 };
 
-var getToHTMLConfig = exports.getToHTMLConfig = function getToHTMLConfig(props) {
+var htmlToStyle = function htmlToStyle(props) {
+  return function (nodeName, node, currentStyle) {
 
-  return {
-    styleToHTML: styleToHTML(props),
-    entityToHTML: entityToHTML,
-    blockToHTML: blockToHTML(props.contentState)
+    if (nodeName === 'span' && node.style.color) {
+      var color = getHexColor(node.style.color);
+      return color ? currentStyle.add('COLOR-' + color.replace('#', '').toUpperCase()) : currentStyle;
+    } else if (nodeName === 'span' && node.style.backgroundColor) {
+      var _color = getHexColor(node.style.backgroundColor);
+      return _color ? currentStyle.add('BGCOLOR-' + _color.replace('#', '').toUpperCase()) : currentStyle;
+    } else if (nodeName === 'sup') {
+      return currentStyle.add('SUPERSCRIPT');
+    } else if (nodeName === 'sub') {
+      return currentStyle.add('SUBSCRIPT');
+    } else if (nodeName === 'span' && node.style.fontSize) {
+      return currentStyle.add('FONTSIZE-' + parseInt(node.style.fontSize, 10));
+    } else if (nodeName === 'span' && node.style.lineHeight) {
+      return currentStyle.add('LINEHEIGHT-' + node.style.lineHeight);
+    } else if (nodeName === 'span' && node.style.letterSpacing) {
+      return currentStyle.add('LETTERSPACING-' + parseInt(node.style.letterSpacing, 10));
+    } else if (nodeName === 'span' && node.style.indent) {
+      return currentStyle.add('INDENT-' + parseInt(node.style.indent, 10));
+    } else if (nodeName === 'span' && node.style.textDecoration === 'line-through') {
+      return currentStyle.add('STRIKETHROUGH');
+    } else if (nodeName === 'span' && node.style.fontFamily) {
+      var fontFamily = props.fontFamilies.find(function (item) {
+        return item.family.toLowerCase() === node.style.fontFamily.toLowerCase();
+      });
+      if (!fontFamily) return currentStyle;
+      return currentStyle.add('FONTFAMILY-' + fontFamily.name.toUpperCase());
+    } else {
+      return currentStyle;
+    }
   };
-};
-
-var htmlToStyle = function htmlToStyle(nodeName, node, currentStyle) {
-
-  if (nodeName === 'span' && node.style.color) {
-    var color = getHexColor(node.style.color);
-    return color ? currentStyle.add('COLOR-' + color.replace('#', '').toUpperCase()) : currentStyle;
-  } else if (nodeName === 'span' && node.style.backgroundColor) {
-    var _color = getHexColor(node.style.backgroundColor);
-    return _color ? currentStyle.add('BGCOLOR-' + _color.replace('#', '').toUpperCase()) : currentStyle;
-  } else if (nodeName === 'sup') {
-    return currentStyle.add('SUPERSCRIPT');
-  } else if (nodeName === 'sub') {
-    return currentStyle.add('SUBSCRIPT');
-  } else if (nodeName === 'span' && node.style.fontSize) {
-    return currentStyle.add('FONTSIZE-' + parseInt(node.style.fontSize, 10));
-  } else if (nodeName === 'span' && node.style.lineHeight) {
-    return currentStyle.add('LINEHEIGHT-' + node.style.lineHeight);
-  } else if (nodeName === 'span' && node.style.textDecoration === 'line-through') {
-    return currentStyle.add('STRIKETHROUGH');
-  } else {
-    return currentStyle;
-  }
 };
 
 var htmlToEntity = function htmlToEntity(nodeName, node, createEntity) {
@@ -431,6 +441,7 @@ var htmlToEntity = function htmlToEntity(nodeName, node, createEntity) {
 
     width = width || 'auto';
     height = height || 'auto';
+
     var entityData = { url: url, width: width, height: height };
 
     if (parentNode.nodeName.toLowerCase() === 'a') {
@@ -439,6 +450,8 @@ var htmlToEntity = function htmlToEntity(nodeName, node, createEntity) {
     }
 
     return createEntity('IMAGE', 'IMMUTABLE', entityData);
+  } else if (nodeName === 'hr') {
+    return createEntity('HR', 'IMMUTABLE', {});
   }
 };
 
@@ -464,6 +477,12 @@ var htmlToBlock = function htmlToBlock(nodeName, node) {
         alignment: nodeStyle.textAlign
       }
     };
+  } else if (nodeName === 'hr') {
+
+    return {
+      type: 'atomic',
+      data: {}
+    };
   } else if (nodeName === 'p' && nodeStyle.textAlign) {
 
     return {
@@ -476,7 +495,21 @@ var htmlToBlock = function htmlToBlock(nodeName, node) {
 };
 
 var getFromHTMLConfig = exports.getFromHTMLConfig = function getFromHTMLConfig(props) {
-  return { htmlToStyle: htmlToStyle, htmlToEntity: htmlToEntity, htmlToBlock: htmlToBlock };
+
+  return {
+    htmlToStyle: htmlToStyle(props),
+    htmlToEntity: htmlToEntity,
+    htmlToBlock: htmlToBlock
+  };
+};
+
+var getToHTMLConfig = exports.getToHTMLConfig = function getToHTMLConfig(props) {
+
+  return {
+    styleToHTML: styleToHTML(props),
+    entityToHTML: entityToHTML,
+    blockToHTML: blockToHTML(props.contentState)
+  };
 };
 ;
 
@@ -496,11 +529,11 @@ var getFromHTMLConfig = exports.getFromHTMLConfig = function getFromHTMLConfig(p
   reactHotLoader.register(styleToHTML, "styleToHTML", "src/configs.js");
   reactHotLoader.register(blockToHTML, "blockToHTML", "src/configs.js");
   reactHotLoader.register(entityToHTML, "entityToHTML", "src/configs.js");
-  reactHotLoader.register(getToHTMLConfig, "getToHTMLConfig", "src/configs.js");
   reactHotLoader.register(htmlToStyle, "htmlToStyle", "src/configs.js");
   reactHotLoader.register(htmlToEntity, "htmlToEntity", "src/configs.js");
   reactHotLoader.register(htmlToBlock, "htmlToBlock", "src/configs.js");
   reactHotLoader.register(getFromHTMLConfig, "getFromHTMLConfig", "src/configs.js");
+  reactHotLoader.register(getToHTMLConfig, "getToHTMLConfig", "src/configs.js");
   leaveModule(module);
 })();
 
