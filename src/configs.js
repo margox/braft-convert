@@ -433,10 +433,10 @@ const htmlToBlock = (nodeName, node) => {
       data: {}
     }
 
-  } else if (nodeName === 'p' && nodeStyle.textAlign) {
+  } else if (nodeStyle.textAlign && blockNames.indexOf(nodeName) > -1) {
 
     return {
-      type: 'unstyled',
+      type: blockTypes[blockNames.indexOf(nodeName)],
       data: {
         textAlign: nodeStyle.textAlign
       }
