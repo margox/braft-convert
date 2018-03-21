@@ -1,11 +1,11 @@
 import { convertToHTML, convertFromHTML } from 'draft-convert'
-import { getToHTMLConfig, getFromHTMLConfig } from './configs'
+import { getToHTMLConfig, getFromHTMLConfig, mergeStyledSpans, defaultFontFamilies } from './configs'
 import { convertFromRaw, convertToRaw } from 'draft-js'
 
-export const convertRawToHTML = (content, fontFamilies = []) => {
+export const convertRawToHTML = (content, fontFamilies = defaultFontFamilies) => {
   try {
     const contentState = convertFromRaw(content)
-    return convertToHTML(getToHTMLConfig({ contentState, fontFamilies }))(contentState)
+    return mergeStyledSpans(convertToHTML(getToHTMLConfig({ contentState, fontFamilies }))(contentState))
   } catch (error) {
     return ''
   }

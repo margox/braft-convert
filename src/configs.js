@@ -144,6 +144,23 @@ const namedColors = {
   "yellowgreen": "#9acd32"
 }
 
+export const defaultFontFamilies = [{
+    name: 'Araial',
+    family: 'Arial, Helvetica, sans-serif'
+  }, {
+    name: 'Georgia',
+    family: 'Georgia, serif'
+  }, {
+    name: 'Impact',
+    family: 'Impact, serif'
+  }, {
+    name: 'Monospace',
+    family: '"Courier New", Courier, monospace'
+  }, {
+    name: 'Tahoma',
+    family: "tahoma, arial, 'Hiragino Sans GB', 宋体, sans-serif"
+}]
+
 export const getHexColor = (color) => {
 
   color = color.replace('color:', '').replace(';', '').replace(' ', '')
@@ -192,16 +209,19 @@ const convertAtomicBlock = (block, contentState) => {
   if (mediaType === 'image') {
 
     let imageWrapStyle = {}
+    let styledClassName = ''
 
     if (float) {
       imageWrapStyle.float = float
+      styledClassName += ' float-' + float
     } else if (alignment) {
       imageWrapStyle.textAlign = alignment
+      styledClassName += ' align-' + alignment
     }
 
     if (link) {
       return (
-        <div className="media-wrap image-wrap" style={imageWrapStyle}>
+        <div className={"media-wrap image-wrap" + styledClassName} style={imageWrapStyle}>
           <a style={{display:'inline-block'}} href={link} target={link_target}>
             <img src={url} width={width} height={height} style={{width, height}} />
           </a>
@@ -209,7 +229,7 @@ const convertAtomicBlock = (block, contentState) => {
       )
     } else {
       return (
-        <div className="media-wrap image-wrap" style={imageWrapStyle}>
+        <div className={"media-wrap image-wrap" + styledClassName} style={imageWrapStyle}>
           <img src={url} width={width} height={height} style={{width, height}}/>
         </div>
       )
@@ -232,27 +252,27 @@ const styleToHTML = (props) => (style) => {
   style = style.toLowerCase()
 
   if (style === 'strikethrough') {
-    return <span style={{textDecoration: 'line-through'}}/>
+    return <braftspan style={{textDecoration: 'line-through'}} isbrafttag="1"/>
   } else if (style === 'superscript') {
     return <sup/>
   } else if (style === 'subscript') {
     return <sub/>
   } else if (style.indexOf('color-') === 0) {
-    return <span style={{color: '#' + style.split('-')[1]}}/>
+    return <braftspan style={{color: '#' + style.split('-')[1]}} isbrafttag="1"/>
   } else if (style.indexOf('bgcolor-') === 0) {
-    return <span style={{backgroundColor: '#' + style.split('-')[1]}}/>
+    return <braftspan style={{backgroundColor: '#' + style.split('-')[1]}} isbrafttag="1"/>
   } else if (style.indexOf('fontsize-') === 0) {
-    return <span style={{fontSize: style.split('-')[1] + 'px'}}/>
+    return <braftspan style={{fontSize: style.split('-')[1] + 'px'}} isbrafttag="1"/>
   } else if (style.indexOf('lineheight-') === 0) {
-    return <span style={{lineHeight: style.split('-')[1]}}/> 
+    return <braftspan style={{lineHeight: style.split('-')[1]}} isbrafttag="1"/> 
   } else if (style.indexOf('letterspacing-') === 0) {
-    return <span style={{ letterSpacing: style.split('-')[1] + 'px'}} />
+    return <braftspan style={{letterSpacing: style.split('-')[1] + 'px'}} isbrafttag="1"/>
   } else if (style.indexOf('indent-') === 0) {
-    return <span style={{ paddingLeft: style.split('-')[1] + 'px', paddingRight: style.split('-')[1] + 'px' }} />
+    return <braftspan style={{paddingLeft: style.split('-')[1] + 'px', paddingRight: style.split('-')[1] + 'px' }} isbrafttag="1"/>
   } else if (style.indexOf('fontfamily-') === 0) {
     let fontFamily = props.fontFamilies.find((item) => item.name.toLowerCase() === style.split('-')[1])
     if (!fontFamily) return
-    return <span style={{fontFamily: fontFamily.family}}/>
+    return <braftspan style={{fontFamily: fontFamily.family}} isbrafttag="1"/>
   }
 
 }
@@ -341,33 +361,37 @@ const entityToHTML = (entity, originalText) => {
 
 const htmlToStyle = (props) => (nodeName, node, currentStyle) => {
 
-  if (nodeName === 'span' && node.style.color) {
-    let color = getHexColor(node.style.color)
-    return color ? currentStyle.add('COLOR-' + color.replace('#', '').toUpperCase()) : currentStyle
-  } else if (nodeName === 'span' && node.style.backgroundColor) {
-    let color = getHexColor(node.style.backgroundColor)
-    return color ? currentStyle.add('BGCOLOR-' + color.replace('#', '').toUpperCase()) : currentStyle
-  } else if (nodeName === 'sup') {
-    return currentStyle.add('SUPERSCRIPT')
-  } else if (nodeName === 'sub') {
-    return currentStyle.add('SUBSCRIPT')
-  } else if (nodeName === 'span' && node.style.fontSize) {
-    return currentStyle.add('FONTSIZE-' + parseInt(node.style.fontSize, 10))
-  } else if (nodeName === 'span' && node.style.lineHeight) {
-    return currentStyle.add('LINEHEIGHT-' + node.style.lineHeight)
-  } else if (nodeName === 'span' && node.style.letterSpacing) {
-    return currentStyle.add('LETTERSPACING-' + parseInt(node.style.letterSpacing, 10))
-  } else if (nodeName === 'span' && node.style.indent) {
-    return currentStyle.add('INDENT-' + parseInt(node.style.indent, 10))
-  } else if (nodeName === 'span' && node.style.textDecoration === 'line-through') {
-    return currentStyle.add('STRIKETHROUGH')
-  } else if (nodeName === 'span' && node.style.fontFamily) {
-    let fontFamily = props.fontFamilies.find((item) => item.family.toLowerCase() === node.style.fontFamily.toLowerCase())
-    if (!fontFamily) return currentStyle
-    return currentStyle.add('FONTFAMILY-' + fontFamily.name.toUpperCase())
-  } else {
-    return currentStyle
+  let newStyle = currentStyle
+
+  for (let i = 0; i < node.style.length; i++) {
+    if (nodeName === 'span' && node.style[i] === 'color') {
+      let color = getHexColor(node.style.color)
+      newStyle = color ? newStyle.add('COLOR-' + color.replace('#', '').toUpperCase()) : newStyle
+    } else if (nodeName === 'span' && node.style[i] === 'background-color') {
+      let color = getHexColor(node.style.backgroundColor)
+      newStyle = color ? newStyle.add('BGCOLOR-' + color.replace('#', '').toUpperCase()) : newStyle
+    } else if (nodeName === 'sup') {
+      newStyle = newStyle.add('SUPERSCRIPT')
+    } else if (nodeName === 'sub') {
+      newStyle = newStyle.add('SUBSCRIPT')
+    } else if (nodeName === 'span' && node.style[i] === 'font-size') {
+      newStyle = newStyle.add('FONTSIZE-' + parseInt(node.style.fontSize, 10))
+    } else if (nodeName === 'span' && node.style[i] === 'line-height') {
+      newStyle = newStyle.add('LINEHEIGHT-' + node.style.lineHeight)
+    } else if (nodeName === 'span' && node.style[i] === 'letter-spacing') {
+      newStyle = newStyle.add('LETTERSPACING-' + parseInt(node.style.letterSpacing, 10))
+    } else if (nodeName === 'span' && (node.style[i] === 'padding-left' || node.style[i] === 'padding-right')) {
+      newStyle = newStyle.add('INDENT-' + parseInt(node.style.paddingLeft, 10))
+    } else if (nodeName === 'span' && node.style[i] === 'text-decoration' && node.style.textDecoration === 'line-through') {
+      newStyle = newStyle.add('STRIKETHROUGH')
+    } else if (nodeName === 'span' && node.style[i] === 'font-family') {
+      let fontFamily = props.fontFamilies.find((item) => item.family.toLowerCase() === node.style.fontFamily.toLowerCase())
+      if (!fontFamily) continue;
+      newStyle = newStyle.add('FONTFAMILY-' + fontFamily.name.toUpperCase())
+    }
   }
+
+  return newStyle
 
 }
 
@@ -463,5 +487,17 @@ export const getToHTMLConfig = (props) => {
     entityToHTML: entityToHTML,
     blockToHTML: blockToHTML(props.contentState)
   }
+
+}
+
+export const mergeStyledSpans = (htmlContent) => {
+
+  const result = htmlContent
+    .replace(/" isbrafttag="1"><braftspan style="/g, ';')
+    .replace(/(\<\/braftspan>)+/g, '</span>')
+    .replace(/<braftspan/g, '<span')
+    .replace(/" isbrafttag="1"/g, ';"')
+
+  return result
 
 }

@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getToHTMLConfig = exports.getFromHTMLConfig = exports.blocks = exports.getHexColor = undefined;
+exports.mergeStyledSpans = exports.getToHTMLConfig = exports.getFromHTMLConfig = exports.blocks = exports.getHexColor = exports.defaultFontFamilies = undefined;
 
 var _react = require("react");
 
@@ -161,6 +161,23 @@ var namedColors = {
   "yellowgreen": "#9acd32"
 };
 
+var defaultFontFamilies = exports.defaultFontFamilies = [{
+  name: 'Araial',
+  family: 'Arial, Helvetica, sans-serif'
+}, {
+  name: 'Georgia',
+  family: 'Georgia, serif'
+}, {
+  name: 'Impact',
+  family: 'Impact, serif'
+}, {
+  name: 'Monospace',
+  family: '"Courier New", Courier, monospace'
+}, {
+  name: 'Tahoma',
+  family: "tahoma, arial, 'Hiragino Sans GB', 宋体, sans-serif"
+}];
+
 var getHexColor = exports.getHexColor = function getHexColor(color) {
 
   color = color.replace('color:', '').replace(';', '').replace(' ', '');
@@ -216,17 +233,20 @@ var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
   if (mediaType === 'image') {
 
     var imageWrapStyle = {};
+    var styledClassName = '';
 
     if (float) {
       imageWrapStyle.float = float;
+      styledClassName += ' float-' + float;
     } else if (alignment) {
       imageWrapStyle.textAlign = alignment;
+      styledClassName += ' align-' + alignment;
     }
 
     if (link) {
       return _react2.default.createElement(
         "div",
-        { className: "media-wrap image-wrap", style: imageWrapStyle },
+        { className: "media-wrap image-wrap" + styledClassName, style: imageWrapStyle },
         _react2.default.createElement(
           "a",
           { style: { display: 'inline-block' }, href: link, target: link_target },
@@ -236,7 +256,7 @@ var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
     } else {
       return _react2.default.createElement(
         "div",
-        { className: "media-wrap image-wrap", style: imageWrapStyle },
+        { className: "media-wrap image-wrap" + styledClassName, style: imageWrapStyle },
         _react2.default.createElement("img", { src: url, width: width, height: height, style: { width: width, height: height } })
       );
     }
@@ -265,29 +285,29 @@ var styleToHTML = function styleToHTML(props) {
     style = style.toLowerCase();
 
     if (style === 'strikethrough') {
-      return _react2.default.createElement("span", { style: { textDecoration: 'line-through' } });
+      return _react2.default.createElement("braftspan", { style: { textDecoration: 'line-through' }, isbrafttag: "1" });
     } else if (style === 'superscript') {
       return _react2.default.createElement("sup", null);
     } else if (style === 'subscript') {
       return _react2.default.createElement("sub", null);
     } else if (style.indexOf('color-') === 0) {
-      return _react2.default.createElement("span", { style: { color: '#' + style.split('-')[1] } });
+      return _react2.default.createElement("braftspan", { style: { color: '#' + style.split('-')[1] }, isbrafttag: "1" });
     } else if (style.indexOf('bgcolor-') === 0) {
-      return _react2.default.createElement("span", { style: { backgroundColor: '#' + style.split('-')[1] } });
+      return _react2.default.createElement("braftspan", { style: { backgroundColor: '#' + style.split('-')[1] }, isbrafttag: "1" });
     } else if (style.indexOf('fontsize-') === 0) {
-      return _react2.default.createElement("span", { style: { fontSize: style.split('-')[1] + 'px' } });
+      return _react2.default.createElement("braftspan", { style: { fontSize: style.split('-')[1] + 'px' }, isbrafttag: "1" });
     } else if (style.indexOf('lineheight-') === 0) {
-      return _react2.default.createElement("span", { style: { lineHeight: style.split('-')[1] } });
+      return _react2.default.createElement("braftspan", { style: { lineHeight: style.split('-')[1] }, isbrafttag: "1" });
     } else if (style.indexOf('letterspacing-') === 0) {
-      return _react2.default.createElement("span", { style: { letterSpacing: style.split('-')[1] + 'px' } });
+      return _react2.default.createElement("braftspan", { style: { letterSpacing: style.split('-')[1] + 'px' }, isbrafttag: "1" });
     } else if (style.indexOf('indent-') === 0) {
-      return _react2.default.createElement("span", { style: { paddingLeft: style.split('-')[1] + 'px', paddingRight: style.split('-')[1] + 'px' } });
+      return _react2.default.createElement("braftspan", { style: { paddingLeft: style.split('-')[1] + 'px', paddingRight: style.split('-')[1] + 'px' }, isbrafttag: "1" });
     } else if (style.indexOf('fontfamily-') === 0) {
       var fontFamily = props.fontFamilies.find(function (item) {
         return item.name.toLowerCase() === style.split('-')[1];
       });
       if (!fontFamily) return;
-      return _react2.default.createElement("span", { style: { fontFamily: fontFamily.family } });
+      return _react2.default.createElement("braftspan", { style: { fontFamily: fontFamily.family }, isbrafttag: "1" });
     }
   };
 };
@@ -389,35 +409,39 @@ var entityToHTML = function entityToHTML(entity, originalText) {
 var htmlToStyle = function htmlToStyle(props) {
   return function (nodeName, node, currentStyle) {
 
-    if (nodeName === 'span' && node.style.color) {
-      var color = getHexColor(node.style.color);
-      return color ? currentStyle.add('COLOR-' + color.replace('#', '').toUpperCase()) : currentStyle;
-    } else if (nodeName === 'span' && node.style.backgroundColor) {
-      var _color = getHexColor(node.style.backgroundColor);
-      return _color ? currentStyle.add('BGCOLOR-' + _color.replace('#', '').toUpperCase()) : currentStyle;
-    } else if (nodeName === 'sup') {
-      return currentStyle.add('SUPERSCRIPT');
-    } else if (nodeName === 'sub') {
-      return currentStyle.add('SUBSCRIPT');
-    } else if (nodeName === 'span' && node.style.fontSize) {
-      return currentStyle.add('FONTSIZE-' + parseInt(node.style.fontSize, 10));
-    } else if (nodeName === 'span' && node.style.lineHeight) {
-      return currentStyle.add('LINEHEIGHT-' + node.style.lineHeight);
-    } else if (nodeName === 'span' && node.style.letterSpacing) {
-      return currentStyle.add('LETTERSPACING-' + parseInt(node.style.letterSpacing, 10));
-    } else if (nodeName === 'span' && node.style.indent) {
-      return currentStyle.add('INDENT-' + parseInt(node.style.indent, 10));
-    } else if (nodeName === 'span' && node.style.textDecoration === 'line-through') {
-      return currentStyle.add('STRIKETHROUGH');
-    } else if (nodeName === 'span' && node.style.fontFamily) {
-      var fontFamily = props.fontFamilies.find(function (item) {
-        return item.family.toLowerCase() === node.style.fontFamily.toLowerCase();
-      });
-      if (!fontFamily) return currentStyle;
-      return currentStyle.add('FONTFAMILY-' + fontFamily.name.toUpperCase());
-    } else {
-      return currentStyle;
+    var newStyle = currentStyle;
+
+    for (var i = 0; i < node.style.length; i++) {
+      if (nodeName === 'span' && node.style[i] === 'color') {
+        var color = getHexColor(node.style.color);
+        newStyle = color ? newStyle.add('COLOR-' + color.replace('#', '').toUpperCase()) : newStyle;
+      } else if (nodeName === 'span' && node.style[i] === 'background-color') {
+        var _color = getHexColor(node.style.backgroundColor);
+        newStyle = _color ? newStyle.add('BGCOLOR-' + _color.replace('#', '').toUpperCase()) : newStyle;
+      } else if (nodeName === 'sup') {
+        newStyle = newStyle.add('SUPERSCRIPT');
+      } else if (nodeName === 'sub') {
+        newStyle = newStyle.add('SUBSCRIPT');
+      } else if (nodeName === 'span' && node.style[i] === 'font-size') {
+        newStyle = newStyle.add('FONTSIZE-' + parseInt(node.style.fontSize, 10));
+      } else if (nodeName === 'span' && node.style[i] === 'line-height') {
+        newStyle = newStyle.add('LINEHEIGHT-' + node.style.lineHeight);
+      } else if (nodeName === 'span' && node.style[i] === 'letter-spacing') {
+        newStyle = newStyle.add('LETTERSPACING-' + parseInt(node.style.letterSpacing, 10));
+      } else if (nodeName === 'span' && (node.style[i] === 'padding-left' || node.style[i] === 'padding-right')) {
+        newStyle = newStyle.add('INDENT-' + parseInt(node.style.paddingLeft, 10));
+      } else if (nodeName === 'span' && node.style[i] === 'text-decoration' && node.style.textDecoration === 'line-through') {
+        newStyle = newStyle.add('STRIKETHROUGH');
+      } else if (nodeName === 'span' && node.style[i] === 'font-family') {
+        var fontFamily = props.fontFamilies.find(function (item) {
+          return item.family.toLowerCase() === node.style.fontFamily.toLowerCase();
+        });
+        if (!fontFamily) continue;
+        newStyle = newStyle.add('FONTFAMILY-' + fontFamily.name.toUpperCase());
+      }
     }
+
+    return newStyle;
   };
 };
 
@@ -511,6 +535,13 @@ var getToHTMLConfig = exports.getToHTMLConfig = function getToHTMLConfig(props) 
     blockToHTML: blockToHTML(props.contentState)
   };
 };
+
+var mergeStyledSpans = exports.mergeStyledSpans = function mergeStyledSpans(htmlContent) {
+
+  var result = htmlContent.replace(/" isbrafttag="1"><braftspan style="/g, ';').replace(/(\<\/braftspan>)+/g, '</span>').replace(/<braftspan/g, '<span').replace(/" isbrafttag="1"/g, ';"');
+
+  return result;
+};
 ;
 
 (function () {
@@ -523,6 +554,7 @@ var getToHTMLConfig = exports.getToHTMLConfig = function getToHTMLConfig(props) 
   }
 
   reactHotLoader.register(namedColors, "namedColors", "src/configs.js");
+  reactHotLoader.register(defaultFontFamilies, "defaultFontFamilies", "src/configs.js");
   reactHotLoader.register(getHexColor, "getHexColor", "src/configs.js");
   reactHotLoader.register(blocks, "blocks", "src/configs.js");
   reactHotLoader.register(convertAtomicBlock, "convertAtomicBlock", "src/configs.js");
@@ -534,6 +566,7 @@ var getToHTMLConfig = exports.getToHTMLConfig = function getToHTMLConfig(props) 
   reactHotLoader.register(htmlToBlock, "htmlToBlock", "src/configs.js");
   reactHotLoader.register(getFromHTMLConfig, "getFromHTMLConfig", "src/configs.js");
   reactHotLoader.register(getToHTMLConfig, "getToHTMLConfig", "src/configs.js");
+  reactHotLoader.register(mergeStyledSpans, "mergeStyledSpans", "src/configs.js");
   leaveModule(module);
 })();
 
