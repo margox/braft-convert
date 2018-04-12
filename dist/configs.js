@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.mergeStyledSpans = exports.getToHTMLConfig = exports.getFromHTMLConfig = exports.blocks = exports.getHexColor = exports.defaultFontFamilies = undefined;
+exports.convertCodeBlock = exports.mergeStyledSpans = exports.getFromHTMLConfig = exports.getToHTMLConfig = exports.blocks = exports.getHexColor = exports.defaultFontFamilies = undefined;
 
 var _react = require("react");
 
@@ -285,29 +285,29 @@ var styleToHTML = function styleToHTML(props) {
     style = style.toLowerCase();
 
     if (style === 'strikethrough') {
-      return _react2.default.createElement("braftspan", { style: { textDecoration: 'line-through' }, isbrafttag: "1" });
+      return _react2.default.createElement("span", { style: { textDecoration: 'line-through' } });
     } else if (style === 'superscript') {
       return _react2.default.createElement("sup", null);
     } else if (style === 'subscript') {
       return _react2.default.createElement("sub", null);
     } else if (style.indexOf('color-') === 0) {
-      return _react2.default.createElement("braftspan", { style: { color: '#' + style.split('-')[1] }, isbrafttag: "1" });
+      return _react2.default.createElement("span", { style: { color: '#' + style.split('-')[1] } });
     } else if (style.indexOf('bgcolor-') === 0) {
-      return _react2.default.createElement("braftspan", { style: { backgroundColor: '#' + style.split('-')[1] }, isbrafttag: "1" });
+      return _react2.default.createElement("span", { style: { backgroundColor: '#' + style.split('-')[1] } });
     } else if (style.indexOf('fontsize-') === 0) {
-      return _react2.default.createElement("braftspan", { style: { fontSize: style.split('-')[1] + 'px' }, isbrafttag: "1" });
+      return _react2.default.createElement("span", { style: { fontSize: style.split('-')[1] + 'px' } });
     } else if (style.indexOf('lineheight-') === 0) {
-      return _react2.default.createElement("braftspan", { style: { lineHeight: style.split('-')[1] }, isbrafttag: "1" });
+      return _react2.default.createElement("span", { style: { lineHeight: style.split('-')[1] } });
     } else if (style.indexOf('letterspacing-') === 0) {
-      return _react2.default.createElement("braftspan", { style: { letterSpacing: style.split('-')[1] + 'px' }, isbrafttag: "1" });
+      return _react2.default.createElement("span", { style: { letterSpacing: style.split('-')[1] + 'px' } });
     } else if (style.indexOf('indent-') === 0) {
-      return _react2.default.createElement("braftspan", { style: { paddingLeft: style.split('-')[1] + 'px', paddingRight: style.split('-')[1] + 'px' }, isbrafttag: "1" });
+      return _react2.default.createElement("span", { style: { paddingLeft: style.split('-')[1] + 'px', paddingRight: style.split('-')[1] + 'px' } });
     } else if (style.indexOf('fontfamily-') === 0) {
       var fontFamily = props.fontFamilies.find(function (item) {
         return item.name.toLowerCase() === style.split('-')[1];
       });
       if (!fontFamily) return;
-      return _react2.default.createElement("braftspan", { style: { fontFamily: fontFamily.family }, isbrafttag: "1" });
+      return _react2.default.createElement("span", { style: { fontFamily: fontFamily.family } });
     }
   };
 };
@@ -409,6 +409,10 @@ var entityToHTML = function entityToHTML(entity, originalText) {
 var htmlToStyle = function htmlToStyle(props) {
   return function (nodeName, node, currentStyle) {
 
+    if (!node || !node.style) {
+      return currentStyle;
+    }
+
     var newStyle = currentStyle;
 
     for (var i = 0; i < node.style.length; i++) {
@@ -426,7 +430,7 @@ var htmlToStyle = function htmlToStyle(props) {
         newStyle = newStyle.add('FONTSIZE-' + parseInt(node.style.fontSize, 10));
       } else if (nodeName === 'span' && node.style[i] === 'line-height') {
         newStyle = newStyle.add('LINEHEIGHT-' + node.style.lineHeight);
-      } else if (nodeName === 'span' && node.style[i] === 'letter-spacing') {
+      } else if (nodeName === 'span' && node.style[i] === 'letter-spacing' && !isNaN(node.style.letterSpacing)) {
         newStyle = newStyle.add('LETTERSPACING-' + parseInt(node.style.letterSpacing, 10));
       } else if (nodeName === 'span' && (node.style[i] === 'padding-left' || node.style[i] === 'padding-right')) {
         newStyle = newStyle.add('INDENT-' + parseInt(node.style.paddingLeft, 10));
@@ -518,15 +522,6 @@ var htmlToBlock = function htmlToBlock(nodeName, node) {
   }
 };
 
-var getFromHTMLConfig = exports.getFromHTMLConfig = function getFromHTMLConfig(props) {
-
-  return {
-    htmlToStyle: htmlToStyle(props),
-    htmlToEntity: htmlToEntity,
-    htmlToBlock: htmlToBlock
-  };
-};
-
 var getToHTMLConfig = exports.getToHTMLConfig = function getToHTMLConfig(props) {
 
   return {
@@ -536,9 +531,22 @@ var getToHTMLConfig = exports.getToHTMLConfig = function getToHTMLConfig(props) 
   };
 };
 
-var mergeStyledSpans = exports.mergeStyledSpans = function mergeStyledSpans(htmlContent) {
+var getFromHTMLConfig = exports.getFromHTMLConfig = function getFromHTMLConfig(props) {
 
-  var result = htmlContent.replace(/" isbrafttag="1"><braftspan style="/g, ';').replace(/(\<\/braftspan>)+/g, '</span>').replace(/<braftspan/g, '<span').replace(/" isbrafttag="1"/g, ';"');
+  return {
+    htmlToStyle: htmlToStyle(props),
+    htmlToEntity: htmlToEntity,
+    htmlToBlock: htmlToBlock
+  };
+};
+
+var mergeStyledSpans = exports.mergeStyledSpans = function mergeStyledSpans(htmlContent) {
+  return htmlContent;
+};
+
+var convertCodeBlock = exports.convertCodeBlock = function convertCodeBlock(htmlContent) {
+
+  var result = htmlContent.replace(/\<code\>\<div\>\<br\>\<\/div\>\<\/code\>/g, "<code><div></div></code>").replace(/\<pre\>\<code\>\<div\>/g, '<code><div>').replace(/\<\/div\>\<\/code\>\<\/pre\>/g, '</div></code>').replace(/\<code\>\<div\>/g, '<pre><code>').replace(/\<\/div\>\<\/code\>/g, '</code></pre>');
 
   return result;
 };
@@ -564,9 +572,10 @@ var mergeStyledSpans = exports.mergeStyledSpans = function mergeStyledSpans(html
   reactHotLoader.register(htmlToStyle, "htmlToStyle", "src/configs.js");
   reactHotLoader.register(htmlToEntity, "htmlToEntity", "src/configs.js");
   reactHotLoader.register(htmlToBlock, "htmlToBlock", "src/configs.js");
-  reactHotLoader.register(getFromHTMLConfig, "getFromHTMLConfig", "src/configs.js");
   reactHotLoader.register(getToHTMLConfig, "getToHTMLConfig", "src/configs.js");
+  reactHotLoader.register(getFromHTMLConfig, "getFromHTMLConfig", "src/configs.js");
   reactHotLoader.register(mergeStyledSpans, "mergeStyledSpans", "src/configs.js");
+  reactHotLoader.register(convertCodeBlock, "convertCodeBlock", "src/configs.js");
   leaveModule(module);
 })();
 

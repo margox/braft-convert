@@ -252,27 +252,27 @@ const styleToHTML = (props) => (style) => {
   style = style.toLowerCase()
 
   if (style === 'strikethrough') {
-    return <braftspan style={{textDecoration: 'line-through'}} isbrafttag="1"/>
+    return <span style={{textDecoration: 'line-through'}}/>
   } else if (style === 'superscript') {
     return <sup/>
   } else if (style === 'subscript') {
     return <sub/>
   } else if (style.indexOf('color-') === 0) {
-    return <braftspan style={{color: '#' + style.split('-')[1]}} isbrafttag="1"/>
+    return <span style={{color: '#' + style.split('-')[1]}}/>
   } else if (style.indexOf('bgcolor-') === 0) {
-    return <braftspan style={{backgroundColor: '#' + style.split('-')[1]}} isbrafttag="1"/>
+    return <span style={{backgroundColor: '#' + style.split('-')[1]}}/>
   } else if (style.indexOf('fontsize-') === 0) {
-    return <braftspan style={{fontSize: style.split('-')[1] + 'px'}} isbrafttag="1"/>
+    return <span style={{fontSize: style.split('-')[1] + 'px'}}/>
   } else if (style.indexOf('lineheight-') === 0) {
-    return <braftspan style={{lineHeight: style.split('-')[1]}} isbrafttag="1"/> 
+    return <span style={{lineHeight: style.split('-')[1]}}/> 
   } else if (style.indexOf('letterspacing-') === 0) {
-    return <braftspan style={{letterSpacing: style.split('-')[1] + 'px'}} isbrafttag="1"/>
+    return <span style={{letterSpacing: style.split('-')[1] + 'px'}}/>
   } else if (style.indexOf('indent-') === 0) {
-    return <braftspan style={{paddingLeft: style.split('-')[1] + 'px', paddingRight: style.split('-')[1] + 'px' }} isbrafttag="1"/>
+    return <span style={{paddingLeft: style.split('-')[1] + 'px', paddingRight: style.split('-')[1] + 'px' }}/>
   } else if (style.indexOf('fontfamily-') === 0) {
     let fontFamily = props.fontFamilies.find((item) => item.name.toLowerCase() === style.split('-')[1])
     if (!fontFamily) return
-    return <braftspan style={{fontFamily: fontFamily.family}} isbrafttag="1"/>
+    return <span style={{fontFamily: fontFamily.family}}/>
   }
 
 }
@@ -359,7 +359,12 @@ const entityToHTML = (entity, originalText) => {
 
 }
 
+
 const htmlToStyle = (props) => (nodeName, node, currentStyle) => {
+
+  if (!node || !node.style) {
+    return currentStyle
+  }
 
   let newStyle = currentStyle
 
@@ -378,7 +383,7 @@ const htmlToStyle = (props) => (nodeName, node, currentStyle) => {
       newStyle = newStyle.add('FONTSIZE-' + parseInt(node.style.fontSize, 10))
     } else if (nodeName === 'span' && node.style[i] === 'line-height') {
       newStyle = newStyle.add('LINEHEIGHT-' + node.style.lineHeight)
-    } else if (nodeName === 'span' && node.style[i] === 'letter-spacing') {
+    } else if (nodeName === 'span' && node.style[i] === 'letter-spacing' && !isNaN(node.style.letterSpacing)) {
       newStyle = newStyle.add('LETTERSPACING-' + parseInt(node.style.letterSpacing, 10))
     } else if (nodeName === 'span' && (node.style[i] === 'padding-left' || node.style[i] === 'padding-right')) {
       newStyle = newStyle.add('INDENT-' + parseInt(node.style.paddingLeft, 10))
@@ -470,16 +475,6 @@ const htmlToBlock = (nodeName, node) => {
 
 }
 
-export const getFromHTMLConfig = (props) => {
-
-  return { 
-    htmlToStyle: htmlToStyle(props),
-    htmlToEntity,
-    htmlToBlock 
-  }
-
-}
-
 export const getToHTMLConfig = (props) => {
 
   return {
@@ -490,13 +485,28 @@ export const getToHTMLConfig = (props) => {
 
 }
 
+export const getFromHTMLConfig = (props) => {
+
+  return { 
+    htmlToStyle: htmlToStyle(props),
+    htmlToEntity,
+    htmlToBlock 
+  }
+
+}
+
 export const mergeStyledSpans = (htmlContent) => {
+  return htmlContent
+}
+
+export const convertCodeBlock = (htmlContent) => {
 
   const result = htmlContent
-    .replace(/" isbrafttag="1"><braftspan style="/g, ';')
-    .replace(/(\<\/braftspan>)+/g, '</span>')
-    .replace(/<braftspan/g, '<span')
-    .replace(/" isbrafttag="1"/g, ';"')
+    .replace(/\<code\>\<div\>\<br\>\<\/div\>\<\/code\>/g, `<code><div></div></code>`)
+    .replace(/\<pre\>\<code\>\<div\>/g, '<code><div>')
+    .replace(/\<\/div\>\<\/code\>\<\/pre\>/g, '</div></code>')
+    .replace(/\<code\>\<div\>/g, '<pre><code>')
+    .replace(/\<\/div\>\<\/code\>/g, '</code></pre>')
 
   return result
 
