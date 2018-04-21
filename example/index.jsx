@@ -15,9 +15,16 @@ class Demo extends React.Component {
   }
 
   componentDidMount() {
-    const rawData = {"blocks":[{"key":"5qndi","text":"asdasdasdasdasdd","type":"code-block","depth":0,"inlineStyleRanges":[],"entityRanges":[],"data":{}},{"key":"fjr11","text":" ","type":"atomic","depth":0,"inlineStyleRanges":[],"entityRanges":[{"offset":0,"length":1,"key":0}],"data":{}},{"key":"ahdd4","text":"hello world!","type":"unstyled","depth":0,"inlineStyleRanges":[],"entityRanges":[],"data":{}}],"entityMap":{"0":{"type":"IMAGE","mutability":"IMMUTABLE","data":{"url":"https://margox.cn/wp-content/uploads/2017/09/QQ20180118-110249@2x-980x458.png","name":"未命名项目","type":"IMAGE"}}}}
-    const HTMLData = '<pre><code>asdasdasdasdasdd</code></pre><div class="media-wrap image-wrap"><img src="https://margox.cn/wp-content/uploads/2017/09/QQ20180118-110249@2x-980x458.png"/></div><p>hello world!</p>'
-    console.log(convertRawToHTML(rawData))
+
+    const draftRawData = '{"blocks":[{"key":"9hu83","text":"Hello World!","type":"unstyled","depth":0,"inlineStyleRanges":[{"offset":6,"length":5,"style":"BOLD"},{"offset":6,"length":5,"style":"COLOR-F32784"}],"entityRanges":[],"data":{}}],"entityMap":{}}'
+    const htmlString = '<p>Hello <strong><span style="color:#f32784">World</span></strong>!</p>'
+
+    console.log(convertRawToHTML(JSON.parse(draftRawData)))
+    // <p>Hello <strong><span style="color:#f32784">World</span></strong>!</p>
+
+    console.log(JSON.stringify(convertHTMLToRaw(htmlString)))
+    // {"blocks":[{"key":"8v6eh","text":"Hello World!","type":"unstyled","depth":0,"inlineStyleRanges":[{"offset":6,"length":5,"style":"BOLD"},{"offset":6,"length":5,"style":"COLOR-F32784"}],"entityRanges":[],"data":{}}],"entityMap":{}}
+
   }
 
   render() {

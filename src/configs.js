@@ -198,13 +198,27 @@ export const blocks = {
 
 const convertAtomicBlock = (block, contentState) => {
 
+  if (!block || !block.key) {
+    return <p></p>
+  }
+
   const contentBlock = contentState.getBlockForKey(block.key)
+
+  if (!contentBlock) {
+    return <p></p>
+  }
+
   const entityKey = contentBlock.getEntityAt(0)
+
+  if (!entityKey) {
+    return <p></p>
+  }
+
   const entity = contentState.getEntity(entityKey)
   const mediaType = entity.getType().toLowerCase()
 
   let { float, alignment } = block.data
-  let { url, link, link_target, width, height } = entity.getData()
+  let { url, link, link_target, width, height, meta } = entity.getData()
 
   if (mediaType === 'image') {
 
@@ -223,22 +237,24 @@ const convertAtomicBlock = (block, contentState) => {
       return (
         <div className={"media-wrap image-wrap" + styledClassName} style={imageWrapStyle}>
           <a style={{display:'inline-block'}} href={link} target={link_target}>
-            <img src={url} width={width} height={height} style={{width, height}} />
+            <img {...meta} src={url} width={width} height={height} style={{width, height}} />
           </a>
         </div>
       )
     } else {
       return (
         <div className={"media-wrap image-wrap" + styledClassName} style={imageWrapStyle}>
-          <img src={url} width={width} height={height} style={{width, height}}/>
+          <img {...meta} src={url} width={width} height={height} style={{width, height}}/>
         </div>
       )
     }
 
   } else if (mediaType === 'audio') {
-    return <div className="media-wrap audio-wrap"><audio controls src={url} /></div>
+    return <div className="media-wrap audio-wrap"><audio controls {...meta} src={url} /></div>
   } else if (mediaType === 'video') {
-    return <div className="media-wrap video-wrap"><video controls src={url} width={width} height={height} /></div>
+    return <div className="media-wrap video-wrap"><video controls {...meta} src={url} width={width} height={height} /></div>
+  } else if (mediaType === 'embed') {
+    return <div className="media-wrap embed-wrap"><div dangerouslySetInnerHTML={{__html: url}}/></div>
   } else if (mediaType === 'hr') {
     return <hr></hr>
   } else {
@@ -359,7 +375,6 @@ const entityToHTML = (entity, originalText) => {
 
 }
 
-
 const htmlToStyle = (props) => (nodeName, node, currentStyle) => {
 
   if (!node || !node.style) {
@@ -402,13 +417,24 @@ const htmlToStyle = (props) => (nodeName, node, currentStyle) => {
 
 const htmlToEntity = (nodeName, node, createEntity) => {
 
+  const { alt, title, id, controls, autoplay, loop, poster } = node
+  let meta = {}
+
+  id && (meta.id = id)
+  alt && (meta.alt = alt)
+  title && (meta.title = title)
+  controls && (meta.controls = controls)
+  autoplay && (meta.autoPlay = autoplay)
+  loop && (meta.loop = loop)
+  poster && (meta.poster = poster)
+
   if (nodeName === 'a' && !node.querySelectorAll('img').length) {
     let { href, target } = node
     return createEntity('LINK', 'MUTABLE',{ href, target })
   } else if (nodeName === 'audio') {
-    return createEntity('AUDIO', 'IMMUTABLE',{ url: node.src }) 
+    return createEntity('AUDIO', 'IMMUTABLE',{ url: node.src, meta }) 
   } else if (nodeName === 'video') {
-    return createEntity('VIDEO', 'IMMUTABLE',{ url: node.src }) 
+    return createEntity('VIDEO', 'IMMUTABLE',{ url: node.src, meta }) 
   } else if (nodeName === 'img') {
 
     let parentNode = node.parentNode
@@ -416,7 +442,7 @@ const htmlToEntity = (nodeName, node, createEntity) => {
     width = width || 'auto'
     height = height || 'auto'
 
-    let entityData = { url, width, height }
+    let entityData = { url, width, height, meta }
 
     if (parentNode.nodeName.toLowerCase() === 'a') {
       entityData.link = parentNode.href
@@ -427,6 +453,16 @@ const htmlToEntity = (nodeName, node, createEntity) => {
 
   } else if (nodeName === 'hr') {
     return createEntity('HR', 'IMMUTABLE', {}) 
+  } else if (node.parentNode && node.parentNode.classList.contains('embed-wrap')) {
+
+    const embedContent = node.innerHTML || node.outerHTML
+
+    if (embedContent) {
+      return createEntity('EMBED', 'IMMUTABLE', {
+        url: embedContent
+      })   
+    }
+
   }
 
 }

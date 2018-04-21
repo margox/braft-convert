@@ -5,6 +5,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.convertCodeBlock = exports.mergeStyledSpans = exports.getFromHTMLConfig = exports.getToHTMLConfig = exports.blocks = exports.getHexColor = exports.defaultFontFamilies = undefined;
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
@@ -214,8 +216,22 @@ var blocks = exports.blocks = {
 
 var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
 
+  if (!block || !block.key) {
+    return _react2.default.createElement("p", null);
+  }
+
   var contentBlock = contentState.getBlockForKey(block.key);
+
+  if (!contentBlock) {
+    return _react2.default.createElement("p", null);
+  }
+
   var entityKey = contentBlock.getEntityAt(0);
+
+  if (!entityKey) {
+    return _react2.default.createElement("p", null);
+  }
+
   var entity = contentState.getEntity(entityKey);
   var mediaType = entity.getType().toLowerCase();
 
@@ -228,7 +244,8 @@ var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
       link = _entity$getData.link,
       link_target = _entity$getData.link_target,
       width = _entity$getData.width,
-      height = _entity$getData.height;
+      height = _entity$getData.height,
+      meta = _entity$getData.meta;
 
   if (mediaType === 'image') {
 
@@ -250,27 +267,33 @@ var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
         _react2.default.createElement(
           "a",
           { style: { display: 'inline-block' }, href: link, target: link_target },
-          _react2.default.createElement("img", { src: url, width: width, height: height, style: { width: width, height: height } })
+          _react2.default.createElement("img", _extends({}, meta, { src: url, width: width, height: height, style: { width: width, height: height } }))
         )
       );
     } else {
       return _react2.default.createElement(
         "div",
         { className: "media-wrap image-wrap" + styledClassName, style: imageWrapStyle },
-        _react2.default.createElement("img", { src: url, width: width, height: height, style: { width: width, height: height } })
+        _react2.default.createElement("img", _extends({}, meta, { src: url, width: width, height: height, style: { width: width, height: height } }))
       );
     }
   } else if (mediaType === 'audio') {
     return _react2.default.createElement(
       "div",
       { className: "media-wrap audio-wrap" },
-      _react2.default.createElement("audio", { controls: true, src: url })
+      _react2.default.createElement("audio", _extends({ controls: true }, meta, { src: url }))
     );
   } else if (mediaType === 'video') {
     return _react2.default.createElement(
       "div",
       { className: "media-wrap video-wrap" },
-      _react2.default.createElement("video", { controls: true, src: url, width: width, height: height })
+      _react2.default.createElement("video", _extends({ controls: true }, meta, { src: url, width: width, height: height }))
+    );
+  } else if (mediaType === 'embed') {
+    return _react2.default.createElement(
+      "div",
+      { className: "media-wrap embed-wrap" },
+      _react2.default.createElement("div", { dangerouslySetInnerHTML: { __html: url } })
     );
   } else if (mediaType === 'hr') {
     return _react2.default.createElement("hr", null);
@@ -450,6 +473,23 @@ var htmlToStyle = function htmlToStyle(props) {
 };
 
 var htmlToEntity = function htmlToEntity(nodeName, node, createEntity) {
+  var alt = node.alt,
+      title = node.title,
+      id = node.id,
+      controls = node.controls,
+      autoplay = node.autoplay,
+      loop = node.loop,
+      poster = node.poster;
+
+  var meta = {};
+
+  id && (meta.id = id);
+  alt && (meta.alt = alt);
+  title && (meta.title = title);
+  controls && (meta.controls = controls);
+  autoplay && (meta.autoPlay = autoplay);
+  loop && (meta.loop = loop);
+  poster && (meta.poster = poster);
 
   if (nodeName === 'a' && !node.querySelectorAll('img').length) {
     var href = node.href,
@@ -457,9 +497,9 @@ var htmlToEntity = function htmlToEntity(nodeName, node, createEntity) {
 
     return createEntity('LINK', 'MUTABLE', { href: href, target: target });
   } else if (nodeName === 'audio') {
-    return createEntity('AUDIO', 'IMMUTABLE', { url: node.src });
+    return createEntity('AUDIO', 'IMMUTABLE', { url: node.src, meta: meta });
   } else if (nodeName === 'video') {
-    return createEntity('VIDEO', 'IMMUTABLE', { url: node.src });
+    return createEntity('VIDEO', 'IMMUTABLE', { url: node.src, meta: meta });
   } else if (nodeName === 'img') {
 
     var parentNode = node.parentNode;
@@ -470,7 +510,7 @@ var htmlToEntity = function htmlToEntity(nodeName, node, createEntity) {
     width = width || 'auto';
     height = height || 'auto';
 
-    var entityData = { url: url, width: width, height: height };
+    var entityData = { url: url, width: width, height: height, meta: meta };
 
     if (parentNode.nodeName.toLowerCase() === 'a') {
       entityData.link = parentNode.href;
@@ -480,6 +520,15 @@ var htmlToEntity = function htmlToEntity(nodeName, node, createEntity) {
     return createEntity('IMAGE', 'IMMUTABLE', entityData);
   } else if (nodeName === 'hr') {
     return createEntity('HR', 'IMMUTABLE', {});
+  } else if (node.parentNode && node.parentNode.classList.contains('embed-wrap')) {
+
+    var embedContent = node.innerHTML || node.outerHTML;
+
+    if (embedContent) {
+      return createEntity('EMBED', 'IMMUTABLE', {
+        url: embedContent
+      });
+    }
   }
 };
 
