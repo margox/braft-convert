@@ -214,6 +214,11 @@ var blocks = exports.blocks = {
   'blockquote': 'blockquote'
 };
 
+var blockTypes = Object.keys(blocks);
+var blockNames = blockTypes.map(function (key) {
+  return blocks[key];
+});
+
 var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
 
   if (!block || !block.key) {
@@ -614,6 +619,8 @@ var convertCodeBlock = exports.convertCodeBlock = function convertCodeBlock(html
   reactHotLoader.register(defaultFontFamilies, "defaultFontFamilies", "src/configs.js");
   reactHotLoader.register(getHexColor, "getHexColor", "src/configs.js");
   reactHotLoader.register(blocks, "blocks", "src/configs.js");
+  reactHotLoader.register(blockTypes, "blockTypes", "src/configs.js");
+  reactHotLoader.register(blockNames, "blockNames", "src/configs.js");
   reactHotLoader.register(convertAtomicBlock, "convertAtomicBlock", "src/configs.js");
   reactHotLoader.register(styleToHTML, "styleToHTML", "src/configs.js");
   reactHotLoader.register(blockToHTML, "blockToHTML", "src/configs.js");

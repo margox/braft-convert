@@ -196,6 +196,9 @@ export const blocks = {
   'blockquote': 'blockquote'
 }
 
+const blockTypes = Object.keys(blocks)
+const blockNames = blockTypes.map(key => blocks[key])
+
 const convertAtomicBlock = (block, contentState) => {
 
   if (!block || !block.key) {

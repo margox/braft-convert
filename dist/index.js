@@ -24,6 +24,7 @@ var convertRawToHTML = exports.convertRawToHTML = function convertRawToHTML(cont
     var contentState = (0, _draftJs.convertFromRaw)(content);
     return (0, _configs.mergeStyledSpans)((0, _draftConvert.convertToHTML)((0, _configs.getToHTMLConfig)({ contentState: contentState, fontFamilies: fontFamilies }))(contentState));
   } catch (error) {
+    console.warn(error);
     return '';
   }
 };
@@ -33,6 +34,7 @@ var convertHTMLToRaw = exports.convertHTMLToRaw = function convertHTMLToRaw(cont
     var contentState = (0, _draftConvert.convertFromHTML)((0, _configs.getFromHTMLConfig)())(content);
     return (0, _draftJs.convertToRaw)(contentState);
   } catch (error) {
+    console.warn(error);
     return {};
   }
 };
