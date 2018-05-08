@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.convertCodeBlock = exports.mergeStyledSpans = exports.getFromHTMLConfig = exports.getToHTMLConfig = exports.blocks = exports.getHexColor = exports.defaultFontFamilies = undefined;
+exports.getFromHTMLConfig = exports.getToHTMLConfig = exports.blocks = exports.getHexColor = exports.defaultFontFamilies = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -362,27 +362,26 @@ var blockToHTML = function blockToHTML(contentState) {
       var nextBlock = contentState.getBlockAfter(block.key);
       var previousBlockType = previousBlock && previousBlock.getType();
       var nextBlockType = nextBlock && nextBlock.getType();
-      var codeBreakLine = block.text ? '' : '<br>';
 
       if (previousBlockType === 'code-block' && nextBlockType === 'code-block') {
         return {
-          start: "<code><div>" + codeBreakLine,
-          end: '</div></code>'
+          start: "<code>",
+          end: '</code>\r\n'
         };
       } else if (previousBlockType === 'code-block') {
         return {
-          start: "<code><div>" + codeBreakLine,
-          end: '</div></code></pre>'
+          start: "<code>",
+          end: '</code>\r\n</pre>'
         };
       } else if (nextBlockType === 'code-block') {
         return {
-          start: "<pre><code><div>" + codeBreakLine,
-          end: '</div></code>'
+          start: "<pre><code>",
+          end: '</code>\r\n'
         };
       } else {
         return {
-          start: "<pre><code><div>" + codeBreakLine,
-          end: '</div></code></pre>'
+          start: "<pre><code>",
+          end: '</code></pre>'
         };
       }
     } else if (blocks[blockType]) {
@@ -596,17 +595,6 @@ var getFromHTMLConfig = exports.getFromHTMLConfig = function getFromHTMLConfig(p
     htmlToBlock: htmlToBlock
   };
 };
-
-var mergeStyledSpans = exports.mergeStyledSpans = function mergeStyledSpans(htmlContent) {
-  return htmlContent;
-};
-
-var convertCodeBlock = exports.convertCodeBlock = function convertCodeBlock(htmlContent) {
-
-  var result = htmlContent.replace(/\<code\>\<div\>\<br\>\<\/div\>\<\/code\>/g, "<code><div></div></code>").replace(/\<pre\>\<code\>\<div\>/g, '<code><div>').replace(/\<\/div\>\<\/code\>\<\/pre\>/g, '</div></code>').replace(/\<code\>\<div\>/g, '<pre><code>').replace(/\<\/div\>\<\/code\>/g, '</code></pre>');
-
-  return result;
-};
 ;
 
 (function () {
@@ -633,8 +621,6 @@ var convertCodeBlock = exports.convertCodeBlock = function convertCodeBlock(html
   reactHotLoader.register(htmlToBlock, "htmlToBlock", "src/configs.js");
   reactHotLoader.register(getToHTMLConfig, "getToHTMLConfig", "src/configs.js");
   reactHotLoader.register(getFromHTMLConfig, "getFromHTMLConfig", "src/configs.js");
-  reactHotLoader.register(mergeStyledSpans, "mergeStyledSpans", "src/configs.js");
-  reactHotLoader.register(convertCodeBlock, "convertCodeBlock", "src/configs.js");
   leaveModule(module);
 })();
 
