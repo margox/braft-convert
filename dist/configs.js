@@ -363,27 +363,29 @@ var blockToHTML = function blockToHTML(contentState) {
       var previousBlockType = previousBlock && previousBlock.getType();
       var nextBlockType = nextBlock && nextBlock.getType();
 
-      if (previousBlockType === 'code-block' && nextBlockType === 'code-block') {
+      if (previousBlockType !== 'code-block' && nextBlockType !== 'code-block') {
         return {
-          start: "<code>",
-          end: '</code>\r\n'
-        };
-      } else if (previousBlockType === 'code-block') {
-        return {
-          start: "<code>",
-          end: '</code>\r\n</pre>'
-        };
-      } else if (nextBlockType === 'code-block') {
-        return {
-          start: "<pre><code>",
-          end: '</code>\r\n'
-        };
-      } else {
-        return {
-          start: "<pre><code>",
-          end: '</code></pre>'
+          start: '<pre>',
+          end: '</pre>'
         };
       }
+      if (previousBlockType !== 'code-block') {
+        return {
+          start: '<pre>',
+          end: '<br/>'
+        };
+      }
+      if (nextBlockType !== 'code-block') {
+        return {
+          start: '',
+          end: '</pre>'
+        };
+      }
+
+      return {
+        start: '',
+        end: '<br/>'
+      };
     } else if (blocks[blockType]) {
       return {
         start: "<" + blocks[blockType] + blockStyle + ">",
