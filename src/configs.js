@@ -350,15 +350,13 @@ const blockToHTML = (contentState) => (block) => {
     return {
       start: `<li${blockStyle}>`,
       end: '</li>',
-      nestStart: '<ul>',
-      nestEnd: '</ul>'
+      nest: <ul/>
     }
   } else if (blockType === 'ordered-list-item') {
     return {
       start: `<li${blockStyle}>`,
       end: '</li>',
-      nestStart: '<ol>',
-      nestEnd: '</ol>'
+      nest: <ol/>
     }
   }
 

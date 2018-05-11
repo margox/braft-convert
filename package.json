@@ -1,6 +1,6 @@
 {
   "name": "braft-convert",
-  "version": "1.8.15",
+  "version": "1.9.1",
   "description": "A convert helper for Braft Editor.",
   "main": "dist/index.js",
   "scripts": {
@@ -23,8 +23,8 @@
   },
   "homepage": "https://github.com/margox/braft-convert#readme",
   "dependencies": {
-    "draft-convert": "^2.0.1",
-    "draft-js": "^0.10.5"
+    "draft-convert": "^2.0.0",
+    "draft-js": "^0.10.3"
   },
   "devDependencies": {
     "babel-cli": "^6.16.0",
