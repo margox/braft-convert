@@ -11,12 +11,6 @@ var _configs = require('./configs');
 
 var _draftJs = require('draft-js');
 
-(function () {
-  var enterModule = require('react-hot-loader/patch').enterModule;
-
-  enterModule && enterModule(module);
-})();
-
 var convertRawToHTML = exports.convertRawToHTML = function convertRawToHTML(content) {
   var fontFamilies = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _configs.defaultFontFamilies;
 
@@ -38,21 +32,4 @@ var convertHTMLToRaw = exports.convertHTMLToRaw = function convertHTMLToRaw(cont
     return {};
   }
 };
-;
-
-(function () {
-  var reactHotLoader = require('react-hot-loader/patch').default;
-
-  var leaveModule = require('react-hot-loader/patch').leaveModule;
-
-  if (!reactHotLoader) {
-    return;
-  }
-
-  reactHotLoader.register(convertRawToHTML, 'convertRawToHTML', 'src/index.js');
-  reactHotLoader.register(convertHTMLToRaw, 'convertHTMLToRaw', 'src/index.js');
-  leaveModule(module);
-})();
-
-;
 //# sourceMappingURL=index.js.map

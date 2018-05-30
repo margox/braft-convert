@@ -13,12 +13,6 @@ var _react2 = _interopRequireDefault(_react);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-(function () {
-  var enterModule = require('react-hot-loader/patch').enterModule;
-
-  enterModule && enterModule(module);
-})();
-
 var namedColors = {
   "aliceblue": "#f0f8ff",
   "antiquewhite": "#faebd7",
@@ -595,34 +589,4 @@ var getFromHTMLConfig = exports.getFromHTMLConfig = function getFromHTMLConfig(p
     htmlToBlock: htmlToBlock
   };
 };
-;
-
-(function () {
-  var reactHotLoader = require('react-hot-loader/patch').default;
-
-  var leaveModule = require('react-hot-loader/patch').leaveModule;
-
-  if (!reactHotLoader) {
-    return;
-  }
-
-  reactHotLoader.register(namedColors, "namedColors", "src/configs.js");
-  reactHotLoader.register(defaultFontFamilies, "defaultFontFamilies", "src/configs.js");
-  reactHotLoader.register(getHexColor, "getHexColor", "src/configs.js");
-  reactHotLoader.register(blocks, "blocks", "src/configs.js");
-  reactHotLoader.register(blockTypes, "blockTypes", "src/configs.js");
-  reactHotLoader.register(blockNames, "blockNames", "src/configs.js");
-  reactHotLoader.register(convertAtomicBlock, "convertAtomicBlock", "src/configs.js");
-  reactHotLoader.register(styleToHTML, "styleToHTML", "src/configs.js");
-  reactHotLoader.register(blockToHTML, "blockToHTML", "src/configs.js");
-  reactHotLoader.register(entityToHTML, "entityToHTML", "src/configs.js");
-  reactHotLoader.register(htmlToStyle, "htmlToStyle", "src/configs.js");
-  reactHotLoader.register(htmlToEntity, "htmlToEntity", "src/configs.js");
-  reactHotLoader.register(htmlToBlock, "htmlToBlock", "src/configs.js");
-  reactHotLoader.register(getToHTMLConfig, "getToHTMLConfig", "src/configs.js");
-  reactHotLoader.register(getFromHTMLConfig, "getFromHTMLConfig", "src/configs.js");
-  leaveModule(module);
-})();
-
-;
 //# sourceMappingURL=configs.js.map
