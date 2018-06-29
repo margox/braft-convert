@@ -12,9 +12,9 @@ export const convertRawToHTML = (content, fontFamilies = defaultFontFamilies) =>
   }
 }
 
-export const convertHTMLToRaw = (content) => {
+export const convertHTMLToRaw = (content, fontFamilies = defaultFontFamilies) => {
   try {
-    const contentState = convertFromHTML(getFromHTMLConfig())(content)
+    const contentState = convertFromHTML(getFromHTMLConfig({ fontFamilies }))(content)
     return convertToRaw(contentState)
   } catch (error) {
     console.warn(error)

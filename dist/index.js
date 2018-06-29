@@ -24,8 +24,10 @@ var convertRawToHTML = exports.convertRawToHTML = function convertRawToHTML(cont
 };
 
 var convertHTMLToRaw = exports.convertHTMLToRaw = function convertHTMLToRaw(content) {
+  var fontFamilies = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _configs.defaultFontFamilies;
+
   try {
-    var contentState = (0, _draftConvert.convertFromHTML)((0, _configs.getFromHTMLConfig)())(content);
+    var contentState = (0, _draftConvert.convertFromHTML)((0, _configs.getFromHTMLConfig)({ fontFamilies: fontFamilies }))(content);
     return (0, _draftJs.convertToRaw)(contentState);
   } catch (error) {
     console.warn(error);

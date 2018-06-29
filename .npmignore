@@ -15,6 +15,7 @@ node_modules
 *.sass-cache
 dist/sample
 sample
+example
 src
 
 # OS or Editor folders
