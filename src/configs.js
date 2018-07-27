@@ -266,7 +266,7 @@ const convertAtomicBlock = (block, contentState) => {
 
 }
 
-const styleToHTML = (props) => (style) => {
+const styleToHTML = (options) => (style) => {
 
   style = style.toLowerCase()
 
@@ -289,7 +289,7 @@ const styleToHTML = (props) => (style) => {
   } else if (style.indexOf('indent-') === 0) {
     return <span style={{paddingLeft: style.split('-')[1] + 'px', paddingRight: style.split('-')[1] + 'px' }}/>
   } else if (style.indexOf('fontfamily-') === 0) {
-    let fontFamily = props.fontFamilies.find((item) => item.name.toLowerCase() === style.split('-')[1])
+    let fontFamily = options.fontFamilies.find((item) => item.name.toLowerCase() === style.split('-')[1])
     if (!fontFamily) return
     return <span style={{fontFamily: fontFamily.family}}/>
   }
@@ -516,12 +516,12 @@ const htmlToBlock = (nodeName, node) => {
 
 }
 
-export const getToHTMLConfig = (props) => {
+export const getToHTMLConfig = (options, contentState) => {
 
   return {
-    styleToHTML: styleToHTML(props),
+    styleToHTML: styleToHTML(options),
     entityToHTML: entityToHTML,
-    blockToHTML: blockToHTML(props.contentState)
+    blockToHTML: blockToHTML(contentState)
   }
 
 }

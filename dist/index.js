@@ -3,7 +3,9 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.convertHTMLToRaw = exports.convertRawToHTML = undefined;
+exports.convertRawToEditorState = exports.convertEditorStateToRaw = exports.convertHTMLToEditorState = exports.convertEditorStateToHTML = exports.convertHTMLToRaw = exports.convertRawToHTML = undefined;
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _draftConvert = require('draft-convert');
 
@@ -11,27 +13,72 @@ var _configs = require('./configs');
 
 var _draftJs = require('draft-js');
 
-var convertRawToHTML = exports.convertRawToHTML = function convertRawToHTML(content) {
-  var fontFamilies = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _configs.defaultFontFamilies;
+var defaultConvertOptions = {
+  fontFamilies: _configs.defaultFontFamilies
+};
+
+var convertRawToHTML = exports.convertRawToHTML = function convertRawToHTML(rawContent, options) {
+
+  options = _extends({}, defaultConvertOptions, options);
 
   try {
-    var contentState = (0, _draftJs.convertFromRaw)(content);
-    return (0, _draftConvert.convertToHTML)((0, _configs.getToHTMLConfig)({ contentState: contentState, fontFamilies: fontFamilies }))(contentState);
+    var contentState = (0, _draftJs.convertFromRaw)(rawContent);
+    return (0, _draftConvert.convertToHTML)((0, _configs.getToHTMLConfig)(options, contentState))(contentState);
   } catch (error) {
     console.warn(error);
     return '';
   }
 };
 
-var convertHTMLToRaw = exports.convertHTMLToRaw = function convertHTMLToRaw(content) {
-  var fontFamilies = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _configs.defaultFontFamilies;
+var convertHTMLToRaw = exports.convertHTMLToRaw = function convertHTMLToRaw(HTMLString, options) {
+
+  options = _extends({}, defaultConvertOptions, options);
 
   try {
-    var contentState = (0, _draftConvert.convertFromHTML)((0, _configs.getFromHTMLConfig)({ fontFamilies: fontFamilies }))(content);
+    var contentState = (0, _draftConvert.convertFromHTML)((0, _configs.getFromHTMLConfig)(options))(HTMLString);
     return (0, _draftJs.convertToRaw)(contentState);
   } catch (error) {
     console.warn(error);
     return {};
+  }
+};
+
+var convertEditorStateToHTML = exports.convertEditorStateToHTML = function convertEditorStateToHTML(editorState, options) {
+
+  options = _extends({}, defaultConvertOptions, options);
+
+  try {
+    var contentState = editorState.getCurrentContent();
+    return (0, _draftConvert.convertToHTML)((0, _configs.getToHTMLConfig)(options, contentState))(contentState);
+  } catch (error) {
+    console.warn(error);
+    return '';
+  }
+};
+
+var convertHTMLToEditorState = exports.convertHTMLToEditorState = function convertHTMLToEditorState(HTMLString, editorDecorators, options) {
+
+  options = _extends({}, defaultConvertOptions, options);
+
+  try {
+    return _draftJs.EditorState.createWithContent((0, _draftConvert.convertFromHTML)((0, _configs.getFromHTMLConfig)(options))(HTMLString), editorDecorators);
+  } catch (error) {
+    console.warn(error);
+    return _draftJs.EditorState.createEmpty(editorDecorators);
+  }
+};
+
+var convertEditorStateToRaw = exports.convertEditorStateToRaw = function convertEditorStateToRaw(editorState) {
+  return (0, _draftJs.convertToRaw)(editorState.getCurrentContent());
+};
+
+var convertRawToEditorState = exports.convertRawToEditorState = function convertRawToEditorState(rawContent, editorDecorators) {
+
+  try {
+    return _draftJs.EditorState.createWithContent((0, _draftJs.convertFromRaw)(rawContent), editorDecorators);
+  } catch (error) {
+    console.warn(error);
+    return _draftJs.EditorState.createEmpty(editorDecorators);
   }
 };
 //# sourceMappingURL=index.js.map

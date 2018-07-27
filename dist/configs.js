@@ -301,7 +301,7 @@ var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
   }
 };
 
-var styleToHTML = function styleToHTML(props) {
+var styleToHTML = function styleToHTML(options) {
   return function (style) {
 
     style = style.toLowerCase();
@@ -325,7 +325,7 @@ var styleToHTML = function styleToHTML(props) {
     } else if (style.indexOf('indent-') === 0) {
       return _react2.default.createElement("span", { style: { paddingLeft: style.split('-')[1] + 'px', paddingRight: style.split('-')[1] + 'px' } });
     } else if (style.indexOf('fontfamily-') === 0) {
-      var fontFamily = props.fontFamilies.find(function (item) {
+      var fontFamily = options.fontFamilies.find(function (item) {
         return item.name.toLowerCase() === style.split('-')[1];
       });
       if (!fontFamily) return;
@@ -572,12 +572,12 @@ var htmlToBlock = function htmlToBlock(nodeName, node) {
   }
 };
 
-var getToHTMLConfig = exports.getToHTMLConfig = function getToHTMLConfig(props) {
+var getToHTMLConfig = exports.getToHTMLConfig = function getToHTMLConfig(options, contentState) {
 
   return {
-    styleToHTML: styleToHTML(props),
+    styleToHTML: styleToHTML(options),
     entityToHTML: entityToHTML,
-    blockToHTML: blockToHTML(props.contentState)
+    blockToHTML: blockToHTML(contentState)
   };
 };
 
