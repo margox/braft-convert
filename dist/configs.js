@@ -239,6 +239,7 @@ var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
       alignment = _block$data.alignment;
 
   var _entity$getData = entity.getData(),
+      src = _entity$getData.src,
       url = _entity$getData.url,
       link = _entity$getData.link,
       link_target = _entity$getData.link_target,
@@ -266,33 +267,33 @@ var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
         _react2.default.createElement(
           "a",
           { style: { display: 'inline-block' }, href: link, target: link_target },
-          _react2.default.createElement("img", _extends({}, meta, { src: url, width: width, height: height, style: { width: width, height: height } }))
+          _react2.default.createElement("img", _extends({}, meta, { src: src || url, width: width, height: height, style: { width: width, height: height } }))
         )
       );
     } else {
       return _react2.default.createElement(
         "div",
         { className: "media-wrap image-wrap" + styledClassName, style: imageWrapStyle },
-        _react2.default.createElement("img", _extends({}, meta, { src: url, width: width, height: height, style: { width: width, height: height } }))
+        _react2.default.createElement("img", _extends({}, meta, { src: src || url, width: width, height: height, style: { width: width, height: height } }))
       );
     }
   } else if (mediaType === 'audio') {
     return _react2.default.createElement(
       "div",
       { className: "media-wrap audio-wrap" },
-      _react2.default.createElement("audio", _extends({ controls: true }, meta, { src: url }))
+      _react2.default.createElement("audio", _extends({ controls: true }, meta, { src: src || url }))
     );
   } else if (mediaType === 'video') {
     return _react2.default.createElement(
       "div",
       { className: "media-wrap video-wrap" },
-      _react2.default.createElement("video", _extends({ controls: true }, meta, { src: url, width: width, height: height }))
+      _react2.default.createElement("video", _extends({ controls: true }, meta, { src: src || url, width: width, height: height }))
     );
   } else if (mediaType === 'embed') {
     return _react2.default.createElement(
       "div",
       { className: "media-wrap embed-wrap" },
-      _react2.default.createElement("div", { dangerouslySetInnerHTML: { __html: url } })
+      _react2.default.createElement("div", { dangerouslySetInnerHTML: { __html: src || url } })
     );
   } else if (mediaType === 'hr') {
     return _react2.default.createElement("hr", null);
@@ -497,9 +498,9 @@ var htmlToEntity = function htmlToEntity(nodeName, node, createEntity) {
 
     return createEntity('LINK', 'MUTABLE', { href: href, target: target });
   } else if (nodeName === 'audio') {
-    return createEntity('AUDIO', 'IMMUTABLE', { url: node.src, meta: meta });
+    return createEntity('AUDIO', 'IMMUTABLE', { src: node.getAttribute('src'), meta: meta });
   } else if (nodeName === 'video') {
-    return createEntity('VIDEO', 'IMMUTABLE', { url: node.src, meta: meta });
+    return createEntity('VIDEO', 'IMMUTABLE', { src: node.getAttribute('src'), meta: meta });
   } else if (nodeName === 'img') {
 
     var parentNode = node.parentNode;
@@ -509,7 +510,7 @@ var htmlToEntity = function htmlToEntity(nodeName, node, createEntity) {
         height = _node$style.height;
 
 
-    entityData.url = node.src;
+    entityData.src = node.getAttribute('src');
     width && (entityData.width = width);
     height && (entityData.height = height);
 
@@ -527,7 +528,7 @@ var htmlToEntity = function htmlToEntity(nodeName, node, createEntity) {
 
     if (embedContent) {
       return createEntity('EMBED', 'IMMUTABLE', {
-        url: embedContent
+        src: embedContent
       });
     }
   }
