@@ -18,6 +18,10 @@ sample
 example
 src
 
+.babelrc
+webpack.config.js
+yarn.lock
+
 # OS or Editor folders
 .DS_Store
 ._*
