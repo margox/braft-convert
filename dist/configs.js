@@ -338,8 +338,6 @@ var entityToHTML = function entityToHTML(options) {
 var styleToHTML = function styleToHTML(options) {
   return function (style) {
 
-    style = style.toLowerCase();
-
     var unitExportFn = options.unitExportFn || defaultUnitExportFn;
 
     if (options.styleExportFn) {
@@ -348,6 +346,8 @@ var styleToHTML = function styleToHTML(options) {
         return customOutput;
       }
     }
+
+    style = style.toLowerCase();
 
     if (style === 'strikethrough') {
       return _react2.default.createElement("span", { style: { textDecoration: 'line-through' } });

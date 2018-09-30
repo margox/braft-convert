@@ -290,8 +290,6 @@ const entityToHTML = (options) => (entity, originalText) => {
 
 const styleToHTML = (options) => (style) => {
 
-  style = style.toLowerCase()
-
   const unitExportFn = options.unitExportFn || defaultUnitExportFn
 
   if (options.styleExportFn) {
@@ -300,6 +298,8 @@ const styleToHTML = (options) => (style) => {
       return customOutput
     }
   }
+
+  style = style.toLowerCase()
 
   if (style === 'strikethrough') {
     return <span style={{textDecoration: 'line-through'}}/>
