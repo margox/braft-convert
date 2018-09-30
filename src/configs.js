@@ -338,7 +338,6 @@ const blockToHTML = (options) => (block) => {
     }
   }
 
-  let result = null
   let blockStyle = ""
 
   const blockType = block.type.toLowerCase()
@@ -411,39 +410,41 @@ const htmlToStyle = (options) => (nodeName, node, currentStyle) => {
   }
 
   const unitImportFn = options.unitImportFn || defaultUnitImportFn
-  let newStyle = currentStyle
+  let newStyle = currentStyle;
 
-  for (let i = 0; i < node.style.length; i++) {
-    if (nodeName === 'span' && node.style[i] === 'color') {
+  [].forEach.call(node.style, (style) => {
+
+    if (nodeName === 'span' && style === 'color') {
       let color = getHexColor(node.style.color)
       newStyle = color ? newStyle.add('COLOR-' + color.replace('#', '').toUpperCase()) : newStyle
-    } else if (nodeName === 'span' && node.style[i] === 'background-color') {
+    } else if (nodeName === 'span' && style === 'background-color') {
       let color = getHexColor(node.style.backgroundColor)
       newStyle = color ? newStyle.add('BGCOLOR-' + color.replace('#', '').toUpperCase()) : newStyle
-    } else if (nodeName === 'span' && node.style[i] === 'font-size') {
+    } else if (nodeName === 'span' && style === 'font-size') {
       newStyle = newStyle.add('FONTSIZE-' + unitImportFn(node.style.fontSize, 'font-size'))
-    } else if (nodeName === 'span' && node.style[i] === 'line-height') {
+    } else if (nodeName === 'span' && style === 'line-height') {
       newStyle = newStyle.add('LINEHEIGHT-' + unitImportFn(node.style.lineHeight, 'line-height'))
-    } else if (nodeName === 'span' && node.style[i] === 'letter-spacing' && !isNaN(node.style.letterSpacing.replace('px', ''))) {
+    } else if (nodeName === 'span' && style === 'letter-spacing' && !isNaN(node.style.letterSpacing.replace('px', ''))) {
       newStyle = newStyle.add('LETTERSPACING-' + unitImportFn(node.style.letterSpacing, 'letter-spacing'))
-    } else if (nodeName === 'span' && node.style[i] === 'text-indent') {
+    } else if (nodeName === 'span' && style === 'text-indent') {
       newStyle = newStyle.add('TEXTINDENT-' + unitImportFn(node.style.textIndent, 'text-indent'))
-    } else if (nodeName === 'span' && node.style[i] === 'text-decoration' && node.style.textDecoration === 'line-through') {
+    } else if (nodeName === 'span' && style === 'text-decoration' && node.style.textDecoration === 'line-through') {
       newStyle = newStyle.add('STRIKETHROUGH')
-    } else if (nodeName === 'span' && node.style[i] === 'font-family') {
+    } else if (nodeName === 'span' && style === 'font-family') {
       let fontFamily = options.fontFamilies.find((item) => item.family.toLowerCase() === node.style.fontFamily.toLowerCase())
-      if (!fontFamily) continue;
+      if (!fontFamily) return;
       newStyle = newStyle.add('FONTFAMILY-' + fontFamily.name.toUpperCase())
     }
-  }
+
+  })
 
   if (nodeName === 'sup') {
     newStyle = newStyle.add('SUPERSCRIPT')
   } else if (nodeName === 'sub') {
     newStyle = newStyle.add('SUBSCRIPT')
-  } 
+  }
 
-  options.styleImportFn && (newStyle = options.styleImportFn(nodeName, node, currentStyle))
+  options.styleImportFn && (newStyle = options.styleImportFn(nodeName, node, newStyle) || newStyle)
   return newStyle
 
 }

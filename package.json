@@ -1,11 +1,11 @@
 {
   "name": "braft-convert",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "A convert helper for Braft Editor.",
   "main": "dist/index.js",
   "scripts": {
     "build": "rm -rf dist/ && BABEL_ENV=production ./node_modules/.bin/babel src --copy-files --source-maps --extensions .es6,.es,.js,.jsx --out-dir dist",
-    "prepublish": "npm run build",
+    "prepare": "npm run build",
     "start": "webpack-dev-server -d --history-api-fallback --hot --inline --progress --colors --port 5997"
   },
   "repository": {
