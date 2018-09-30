@@ -317,8 +317,6 @@ const styleToHTML = (options) => (style) => {
     return <span style={{lineHeight: unitExportFn(getStyleValue(style), 'line-height', 'html')}}/> 
   } else if (style.indexOf('letterspacing-') === 0) {
     return <span style={{letterSpacing: unitExportFn(getStyleValue(style), 'letter-spacing', 'html')}}/>
-  } else if (style.indexOf('textindent-') === 0) {
-    return <span style={{textIndent: unitExportFn(getStyleValue(style), 'text-indent', 'html')}}/>
   } else if (style.indexOf('fontfamily-') === 0) {
     let fontFamily = options.fontFamilies.find((item) => item.name.toLowerCase() === getStyleValue(style))
     if (!fontFamily) return
@@ -338,13 +336,25 @@ const blockToHTML = (options) => (block) => {
     }
   }
 
-  let blockStyle = ""
+  let blockStyle = ''
 
   const blockType = block.type.toLowerCase()
-  const { textAlign } = block.data
+  const { textAlign, textIndent } = block.data
 
-  if (textAlign) {
-    blockStyle = ` style="text-align:${textAlign};"`
+  if (textAlign || textIndent) {
+
+    blockStyle = ' style="'
+
+    if (textAlign) {
+      blockStyle += `text-align:${textAlign};`
+    }
+
+    if (textIndent && !isNaN(textIndent) && textIndent > 0) {
+      blockStyle += `text-indent:${textIndent * 2}em;`
+    }
+
+    blockStyle += '"'
+
   }
 
   if (blockType === 'atomic') {
@@ -426,8 +436,6 @@ const htmlToStyle = (options) => (nodeName, node, currentStyle) => {
       newStyle = newStyle.add('LINEHEIGHT-' + unitImportFn(node.style.lineHeight, 'line-height'))
     } else if (nodeName === 'span' && style === 'letter-spacing' && !isNaN(node.style.letterSpacing.replace('px', ''))) {
       newStyle = newStyle.add('LETTERSPACING-' + unitImportFn(node.style.letterSpacing, 'letter-spacing'))
-    } else if (nodeName === 'span' && style === 'text-indent') {
-      newStyle = newStyle.add('TEXTINDENT-' + unitImportFn(node.style.textIndent, 'text-indent'))
     } else if (nodeName === 'span' && style === 'text-decoration' && node.style.textDecoration === 'line-through') {
       newStyle = newStyle.add('STRIKETHROUGH')
     } else if (nodeName === 'span' && style === 'font-family') {
@@ -547,13 +555,21 @@ const htmlToBlock = (options) => (nodeName, node) => {
       data: {}
     }
 
-  } else if (nodeStyle.textAlign && blockNames.indexOf(nodeName) > -1) {
+  } else if ((nodeStyle.textAlign || nodeStyle.textIndent) && blockNames.indexOf(nodeName) > -1) {
+
+    const blockData = {}
+  
+    if (nodeStyle.textAlign) {
+      blockData.textAlign = nodeStyle.textAlign
+    }
+
+    if (nodeStyle.textIndent) {
+      blockData.textIndent = Math.ceil(parseInt(nodeStyle.textIndent, 10) / 2)
+    }
 
     return {
       type: blockTypes[blockNames.indexOf(nodeName)],
-      data: {
-        textAlign: nodeStyle.textAlign
-      }
+      data: blockData
     }
 
   }
