@@ -12,7 +12,8 @@ export const convertRawToHTML = (rawContent, options) => {
 
   try {
     const contentState = convertFromRaw(rawContent)
-    return convertToHTML(getToHTMLConfig(options, contentState))(contentState)
+    options.contentState = contentState
+    return convertToHTML(getToHTMLConfig(options))(contentState)
   } catch (error) {
     console.warn(error)
     return ''
@@ -40,7 +41,8 @@ export const convertEditorStateToHTML = (editorState, options) => {
 
   try {
     const contentState = editorState.getCurrentContent()
-    return convertToHTML(getToHTMLConfig(options, contentState))(contentState)
+    options.contentState = contentState
+    return convertToHTML(getToHTMLConfig(options))(contentState)
   } catch (error) {
     console.warn(error)
     return ''

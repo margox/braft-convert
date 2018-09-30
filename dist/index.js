@@ -23,7 +23,8 @@ var convertRawToHTML = exports.convertRawToHTML = function convertRawToHTML(rawC
 
   try {
     var contentState = (0, _draftJs.convertFromRaw)(rawContent);
-    return (0, _draftConvert.convertToHTML)((0, _configs.getToHTMLConfig)(options, contentState))(contentState);
+    options.contentState = contentState;
+    return (0, _draftConvert.convertToHTML)((0, _configs.getToHTMLConfig)(options))(contentState);
   } catch (error) {
     console.warn(error);
     return '';
@@ -49,7 +50,8 @@ var convertEditorStateToHTML = exports.convertEditorStateToHTML = function conve
 
   try {
     var contentState = editorState.getCurrentContent();
-    return (0, _draftConvert.convertToHTML)((0, _configs.getToHTMLConfig)(options, contentState))(contentState);
+    options.contentState = contentState;
+    return (0, _draftConvert.convertToHTML)((0, _configs.getToHTMLConfig)(options))(contentState);
   } catch (error) {
     console.warn(error);
     return '';

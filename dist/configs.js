@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getFromHTMLConfig = exports.getToHTMLConfig = exports.blocks = exports.getHexColor = exports.defaultFontFamilies = undefined;
+exports.getFromHTMLConfig = exports.getToHTMLConfig = exports.blocks = exports.getHexColor = exports.defaultFontFamilies = exports.namedColors = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -13,7 +13,7 @@ var _react2 = _interopRequireDefault(_react);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var namedColors = {
+var namedColors = exports.namedColors = {
   "aliceblue": "#f0f8ff",
   "antiquewhite": "#faebd7",
   "aqua": "#00ffff",
@@ -155,6 +155,16 @@ var namedColors = {
   "whitesmoke": "#f5f5f5",
   "yellow": "#ffff00",
   "yellowgreen": "#9acd32"
+};
+
+var getStyleValue = function getStyleValue(style) {
+  return style.split('-')[1];
+};
+var defaultUnitExportFn = function defaultUnitExportFn(unit) {
+  return unit + 'px';
+};
+var defaultUnitImportFn = function defaultUnitImportFn(unit) {
+  return unit.replace('px', '');
 };
 
 var defaultFontFamilies = exports.defaultFontFamilies = [{
@@ -302,10 +312,42 @@ var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
   }
 };
 
+var entityToHTML = function entityToHTML(options) {
+  return function (entity, originalText) {
+    var entityExportFn = options.entityExportFn;
+
+    var entityType = entity.type.toLowerCase();
+
+    if (entityExportFn) {
+      var customOutput = entityExportFn(entity, originalText);
+      if (customOutput) {
+        return customOutput;
+      }
+    }
+
+    if (entityType === 'link') {
+      return _react2.default.createElement(
+        "a",
+        { href: entity.data.href, target: entity.data.target },
+        originalText
+      );
+    }
+  };
+};
+
 var styleToHTML = function styleToHTML(options) {
   return function (style) {
 
     style = style.toLowerCase();
+
+    var unitExportFn = options.unitExportFn || defaultUnitExportFn;
+
+    if (options.styleExportFn) {
+      var customOutput = options.styleExportFn(style, options);
+      if (customOutput) {
+        return customOutput;
+      }
+    }
 
     if (style === 'strikethrough') {
       return _react2.default.createElement("span", { style: { textDecoration: 'line-through' } });
@@ -314,20 +356,20 @@ var styleToHTML = function styleToHTML(options) {
     } else if (style === 'subscript') {
       return _react2.default.createElement("sub", null);
     } else if (style.indexOf('color-') === 0) {
-      return _react2.default.createElement("span", { style: { color: '#' + style.split('-')[1] } });
+      return _react2.default.createElement("span", { style: { color: '#' + getStyleValue(style) } });
     } else if (style.indexOf('bgcolor-') === 0) {
-      return _react2.default.createElement("span", { style: { backgroundColor: '#' + style.split('-')[1] } });
+      return _react2.default.createElement("span", { style: { backgroundColor: '#' + getStyleValue(style) } });
     } else if (style.indexOf('fontsize-') === 0) {
-      return _react2.default.createElement("span", { style: { fontSize: style.split('-')[1] + 'px' } });
+      return _react2.default.createElement("span", { style: { fontSize: unitExportFn(getStyleValue(style), 'font-size', 'html') } });
     } else if (style.indexOf('lineheight-') === 0) {
-      return _react2.default.createElement("span", { style: { lineHeight: style.split('-')[1] } });
+      return _react2.default.createElement("span", { style: { lineHeight: unitExportFn(getStyleValue(style), 'line-height', 'html') } });
     } else if (style.indexOf('letterspacing-') === 0) {
-      return _react2.default.createElement("span", { style: { letterSpacing: style.split('-')[1] + 'px' } });
-    } else if (style.indexOf('indent-') === 0) {
-      return _react2.default.createElement("span", { style: { paddingLeft: style.split('-')[1] + 'px', paddingRight: style.split('-')[1] + 'px' } });
+      return _react2.default.createElement("span", { style: { letterSpacing: unitExportFn(getStyleValue(style), 'letter-spacing', 'html') } });
+    } else if (style.indexOf('textindent-') === 0) {
+      return _react2.default.createElement("span", { style: { textIndent: unitExportFn(getStyleValue(style), 'text-indent', 'html') } });
     } else if (style.indexOf('fontfamily-') === 0) {
       var fontFamily = options.fontFamilies.find(function (item) {
-        return item.name.toLowerCase() === style.split('-')[1];
+        return item.name.toLowerCase() === getStyleValue(style);
       });
       if (!fontFamily) return;
       return _react2.default.createElement("span", { style: { fontFamily: fontFamily.family } });
@@ -335,8 +377,18 @@ var styleToHTML = function styleToHTML(options) {
   };
 };
 
-var blockToHTML = function blockToHTML(contentState) {
+var blockToHTML = function blockToHTML(options) {
   return function (block) {
+    var blockExportFn = options.blockExportFn,
+        contentState = options.contentState;
+
+
+    if (blockExportFn) {
+      var customOutput = blockExportFn(contentState, block);
+      if (customOutput) {
+        return customOutput;
+      }
+    }
 
     var result = null;
     var blockStyle = "";
@@ -364,12 +416,14 @@ var blockToHTML = function blockToHTML(contentState) {
           end: '</pre>'
         };
       }
+
       if (previousBlockType !== 'code-block') {
         return {
           start: '<pre>',
           end: '<br/>'
         };
       }
+
       if (nextBlockType !== 'code-block') {
         return {
           start: '',
@@ -402,39 +456,14 @@ var blockToHTML = function blockToHTML(contentState) {
   };
 };
 
-var entityToHTML = function entityToHTML(entity, originalText) {
-
-  var result = originalText;
-  var entityType = entity.type.toLowerCase();
-
-  if (entityType === 'link') {
-    return _react2.default.createElement(
-      "a",
-      { href: entity.data.href, target: entity.data.target },
-      originalText
-    );
-  } else if (entityType === 'color') {
-    return _react2.default.createElement(
-      "span",
-      { style: { color: entity.data.color } },
-      originalText
-    );
-  } else if (entityType === 'bg-color') {
-    return _react2.default.createElement(
-      "span",
-      { style: { backgroundColor: entity.data.color } },
-      originalText
-    );
-  }
-};
-
-var htmlToStyle = function htmlToStyle(props) {
+var htmlToStyle = function htmlToStyle(options) {
   return function (nodeName, node, currentStyle) {
 
     if (!node || !node.style) {
       return currentStyle;
     }
 
+    var unitImportFn = options.unitImportFn || defaultUnitImportFn;
     var newStyle = currentStyle;
 
     for (var i = 0; i < node.style.length; i++) {
@@ -445,17 +474,17 @@ var htmlToStyle = function htmlToStyle(props) {
         var _color = getHexColor(node.style.backgroundColor);
         newStyle = _color ? newStyle.add('BGCOLOR-' + _color.replace('#', '').toUpperCase()) : newStyle;
       } else if (nodeName === 'span' && node.style[i] === 'font-size') {
-        newStyle = newStyle.add('FONTSIZE-' + parseInt(node.style.fontSize, 10));
+        newStyle = newStyle.add('FONTSIZE-' + unitImportFn(node.style.fontSize, 'font-size'));
       } else if (nodeName === 'span' && node.style[i] === 'line-height') {
-        newStyle = newStyle.add('LINEHEIGHT-' + node.style.lineHeight);
+        newStyle = newStyle.add('LINEHEIGHT-' + unitImportFn(node.style.lineHeight, 'line-height'));
       } else if (nodeName === 'span' && node.style[i] === 'letter-spacing' && !isNaN(node.style.letterSpacing.replace('px', ''))) {
-        newStyle = newStyle.add('LETTERSPACING-' + parseInt(node.style.letterSpacing, 10));
-      } else if (nodeName === 'span' && (node.style[i] === 'padding-left' || node.style[i] === 'padding-right')) {
-        newStyle = newStyle.add('INDENT-' + parseInt(node.style.paddingLeft, 10));
+        newStyle = newStyle.add('LETTERSPACING-' + unitImportFn(node.style.letterSpacing, 'letter-spacing'));
+      } else if (nodeName === 'span' && node.style[i] === 'text-indent') {
+        newStyle = newStyle.add('TEXTINDENT-' + unitImportFn(node.style.textIndent, 'text-indent'));
       } else if (nodeName === 'span' && node.style[i] === 'text-decoration' && node.style.textDecoration === 'line-through') {
         newStyle = newStyle.add('STRIKETHROUGH');
       } else if (nodeName === 'span' && node.style[i] === 'font-family') {
-        var fontFamily = props.fontFamilies.find(function (item) {
+        var fontFamily = options.fontFamilies.find(function (item) {
           return item.family.toLowerCase() === node.style.fontFamily.toLowerCase();
         });
         if (!fontFamily) continue;
@@ -469,125 +498,145 @@ var htmlToStyle = function htmlToStyle(props) {
       newStyle = newStyle.add('SUBSCRIPT');
     }
 
+    options.styleImportFn && (newStyle = options.styleImportFn(nodeName, node, currentStyle));
     return newStyle;
   };
 };
 
-var htmlToEntity = function htmlToEntity(nodeName, node, createEntity) {
-  var alt = node.alt,
-      title = node.title,
-      id = node.id,
-      controls = node.controls,
-      autoplay = node.autoplay,
-      loop = node.loop,
-      poster = node.poster;
+var htmlToEntity = function htmlToEntity(options) {
+  return function (nodeName, node, createEntity) {
 
-  var meta = {};
-
-  id && (meta.id = id);
-  alt && (meta.alt = alt);
-  title && (meta.title = title);
-  controls && (meta.controls = controls);
-  autoplay && (meta.autoPlay = autoplay);
-  loop && (meta.loop = loop);
-  poster && (meta.poster = poster);
-
-  if (nodeName === 'a' && !node.querySelectorAll('img').length) {
-    var href = node.href,
-        target = node.target;
-
-    return createEntity('LINK', 'MUTABLE', { href: href, target: target });
-  } else if (nodeName === 'audio') {
-    return createEntity('AUDIO', 'IMMUTABLE', { src: node.getAttribute('src'), meta: meta });
-  } else if (nodeName === 'video') {
-    return createEntity('VIDEO', 'IMMUTABLE', { src: node.getAttribute('src'), meta: meta });
-  } else if (nodeName === 'img') {
-
-    var parentNode = node.parentNode;
-    var entityData = { meta: meta };
-    var _node$style = node.style,
-        width = _node$style.width,
-        height = _node$style.height;
-
-
-    entityData.src = node.getAttribute('src');
-    width && (entityData.width = width);
-    height && (entityData.height = height);
-
-    if (parentNode.nodeName.toLowerCase() === 'a') {
-      entityData.link = parentNode.href;
-      entityData.link_target = parentNode.target;
+    if (options && options.entityImportFn) {
+      var customInput = options.entityImportFn(nodeName, node, createEntity);
+      if (customInput) {
+        return customInput;
+      }
     }
 
-    return createEntity('IMAGE', 'IMMUTABLE', entityData);
-  } else if (nodeName === 'hr') {
-    return createEntity('HR', 'IMMUTABLE', {});
-  } else if (node.parentNode && node.parentNode.classList.contains('embed-wrap')) {
+    var alt = node.alt,
+        title = node.title,
+        id = node.id,
+        controls = node.controls,
+        autoplay = node.autoplay,
+        loop = node.loop,
+        poster = node.poster;
 
-    var embedContent = node.innerHTML || node.outerHTML;
+    var meta = {};
 
-    if (embedContent) {
-      return createEntity('EMBED', 'IMMUTABLE', {
-        src: embedContent
-      });
+    id && (meta.id = id);
+    alt && (meta.alt = alt);
+    title && (meta.title = title);
+    controls && (meta.controls = controls);
+    autoplay && (meta.autoPlay = autoplay);
+    loop && (meta.loop = loop);
+    poster && (meta.poster = poster);
+
+    if (nodeName === 'a' && !node.querySelectorAll('img').length) {
+      var href = node.href,
+          target = node.target;
+
+      return createEntity('LINK', 'MUTABLE', { href: href, target: target });
+    } else if (nodeName === 'audio') {
+      return createEntity('AUDIO', 'IMMUTABLE', { src: node.getAttribute('src'), meta: meta });
+    } else if (nodeName === 'video') {
+      return createEntity('VIDEO', 'IMMUTABLE', { src: node.getAttribute('src'), meta: meta });
+    } else if (nodeName === 'img') {
+
+      var parentNode = node.parentNode;
+      var entityData = { meta: meta };
+      var _node$style = node.style,
+          width = _node$style.width,
+          height = _node$style.height;
+
+
+      entityData.src = node.getAttribute('src');
+      width && (entityData.width = width);
+      height && (entityData.height = height);
+
+      if (parentNode.nodeName.toLowerCase() === 'a') {
+        entityData.link = parentNode.href;
+        entityData.link_target = parentNode.target;
+      }
+
+      return createEntity('IMAGE', 'IMMUTABLE', entityData);
+    } else if (nodeName === 'hr') {
+      return createEntity('HR', 'IMMUTABLE', {});
+    } else if (node.parentNode && node.parentNode.classList.contains('embed-wrap')) {
+
+      var embedContent = node.innerHTML || node.outerHTML;
+
+      if (embedContent) {
+        return createEntity('EMBED', 'IMMUTABLE', {
+          src: embedContent
+        });
+      }
     }
-  }
-};
-
-var htmlToBlock = function htmlToBlock(nodeName, node) {
-
-  var nodeStyle = node.style || {};
-
-  if (node.classList && node.classList.contains('media-wrap')) {
-
-    return {
-      type: 'atomic',
-      data: {
-        float: nodeStyle.float,
-        alignment: nodeStyle.textAlign
-      }
-    };
-  } else if (nodeName === 'img') {
-
-    return {
-      type: 'atomic',
-      data: {
-        float: nodeStyle.float,
-        alignment: nodeStyle.textAlign
-      }
-    };
-  } else if (nodeName === 'hr') {
-
-    return {
-      type: 'atomic',
-      data: {}
-    };
-  } else if (nodeStyle.textAlign && blockNames.indexOf(nodeName) > -1) {
-
-    return {
-      type: blockTypes[blockNames.indexOf(nodeName)],
-      data: {
-        textAlign: nodeStyle.textAlign
-      }
-    };
-  }
-};
-
-var getToHTMLConfig = exports.getToHTMLConfig = function getToHTMLConfig(options, contentState) {
-
-  return {
-    styleToHTML: styleToHTML(options),
-    entityToHTML: entityToHTML,
-    blockToHTML: blockToHTML(contentState)
   };
 };
 
-var getFromHTMLConfig = exports.getFromHTMLConfig = function getFromHTMLConfig(props) {
+var htmlToBlock = function htmlToBlock(options) {
+  return function (nodeName, node) {
+
+    if (options && options.blockImportFn) {
+      var customInput = options.blockImportFn(nodeName, node);
+      if (customInput) {
+        return customInput;
+      }
+    }
+
+    var nodeStyle = node.style || {};
+
+    if (node.classList && node.classList.contains('media-wrap')) {
+
+      return {
+        type: 'atomic',
+        data: {
+          float: nodeStyle.float,
+          alignment: nodeStyle.textAlign
+        }
+      };
+    } else if (nodeName === 'img') {
+
+      return {
+        type: 'atomic',
+        data: {
+          float: nodeStyle.float,
+          alignment: nodeStyle.textAlign
+        }
+      };
+    } else if (nodeName === 'hr') {
+
+      return {
+        type: 'atomic',
+        data: {}
+      };
+    } else if (nodeStyle.textAlign && blockNames.indexOf(nodeName) > -1) {
+
+      return {
+        type: blockTypes[blockNames.indexOf(nodeName)],
+        data: {
+          textAlign: nodeStyle.textAlign
+        }
+      };
+    }
+  };
+};
+
+var getToHTMLConfig = exports.getToHTMLConfig = function getToHTMLConfig(options) {
 
   return {
-    htmlToStyle: htmlToStyle(props),
-    htmlToEntity: htmlToEntity,
-    htmlToBlock: htmlToBlock
+    styleToHTML: styleToHTML(options),
+    entityToHTML: entityToHTML(options),
+    blockToHTML: blockToHTML(options)
+  };
+};
+
+var getFromHTMLConfig = exports.getFromHTMLConfig = function getFromHTMLConfig(options) {
+
+  return {
+    htmlToStyle: htmlToStyle(options),
+    htmlToEntity: htmlToEntity(options),
+    htmlToBlock: htmlToBlock(options)
   };
 };
 //# sourceMappingURL=configs.js.map

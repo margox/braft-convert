@@ -1,6 +1,6 @@
 import React from 'react'
 
-const namedColors = {
+export const namedColors = {
   "aliceblue": "#f0f8ff",
   "antiquewhite": "#faebd7",
   "aqua": "#00ffff",
@@ -144,6 +144,10 @@ const namedColors = {
   "yellowgreen": "#9acd32"
 }
 
+const getStyleValue = style => style.split('-')[1]
+const defaultUnitExportFn = unit => unit + 'px'
+const defaultUnitImportFn = unit => unit.replace('px', '')
+
 export const defaultFontFamilies = [{
     name: 'Araial',
     family: 'Arial, Helvetica, sans-serif'
@@ -266,9 +270,36 @@ const convertAtomicBlock = (block, contentState) => {
 
 }
 
+const entityToHTML = (options) => (entity, originalText) => {
+
+  const { entityExportFn } = options
+  const entityType = entity.type.toLowerCase()
+
+  if (entityExportFn) {
+    const customOutput = entityExportFn(entity, originalText)
+    if (customOutput) {
+      return customOutput
+    }
+  }
+
+  if (entityType === 'link') {
+    return <a href={entity.data.href} target={entity.data.target}>{originalText}</a>
+  }
+
+}
+
 const styleToHTML = (options) => (style) => {
 
   style = style.toLowerCase()
+
+  const unitExportFn = options.unitExportFn || defaultUnitExportFn
+
+  if (options.styleExportFn) {
+    const customOutput = options.styleExportFn(style, options)
+    if (customOutput) {
+      return customOutput
+    }
+  }
 
   if (style === 'strikethrough') {
     return <span style={{textDecoration: 'line-through'}}/>
@@ -277,26 +308,35 @@ const styleToHTML = (options) => (style) => {
   } else if (style === 'subscript') {
     return <sub/>
   } else if (style.indexOf('color-') === 0) {
-    return <span style={{color: '#' + style.split('-')[1]}}/>
+    return <span style={{color: '#' + getStyleValue(style)}}/>
   } else if (style.indexOf('bgcolor-') === 0) {
-    return <span style={{backgroundColor: '#' + style.split('-')[1]}}/>
+    return <span style={{backgroundColor: '#' + getStyleValue(style)}}/>
   } else if (style.indexOf('fontsize-') === 0) {
-    return <span style={{fontSize: style.split('-')[1] + 'px'}}/>
+    return <span style={{fontSize: unitExportFn(getStyleValue(style), 'font-size', 'html')}}/>
   } else if (style.indexOf('lineheight-') === 0) {
-    return <span style={{lineHeight: style.split('-')[1]}}/> 
+    return <span style={{lineHeight: unitExportFn(getStyleValue(style), 'line-height', 'html')}}/> 
   } else if (style.indexOf('letterspacing-') === 0) {
-    return <span style={{letterSpacing: style.split('-')[1] + 'px'}}/>
-  } else if (style.indexOf('indent-') === 0) {
-    return <span style={{paddingLeft: style.split('-')[1] + 'px', paddingRight: style.split('-')[1] + 'px' }}/>
+    return <span style={{letterSpacing: unitExportFn(getStyleValue(style), 'letter-spacing', 'html')}}/>
+  } else if (style.indexOf('textindent-') === 0) {
+    return <span style={{textIndent: unitExportFn(getStyleValue(style), 'text-indent', 'html')}}/>
   } else if (style.indexOf('fontfamily-') === 0) {
-    let fontFamily = options.fontFamilies.find((item) => item.name.toLowerCase() === style.split('-')[1])
+    let fontFamily = options.fontFamilies.find((item) => item.name.toLowerCase() === getStyleValue(style))
     if (!fontFamily) return
     return <span style={{fontFamily: fontFamily.family}}/>
   }
 
 }
 
-const blockToHTML = (contentState) => (block) => {
+const blockToHTML = (options) => (block) => {
+
+  const { blockExportFn, contentState } = options
+
+  if (blockExportFn) {
+    const customOutput = blockExportFn(contentState, block)
+    if (customOutput) {
+      return customOutput
+    }
+  }
 
   let result = null
   let blockStyle = ""
@@ -323,12 +363,14 @@ const blockToHTML = (contentState) => (block) => {
         end: '</pre>'
       }
     }
+
     if (previousBlockType !== 'code-block') {
       return {
         start: '<pre>',
         end: '<br/>'
       }
     }
+
     if (nextBlockType !== 'code-block') {
       return {
         start: '',
@@ -362,27 +404,13 @@ const blockToHTML = (contentState) => (block) => {
 
 }
 
-const entityToHTML = (entity, originalText) => {
-
-  let result = originalText
-  const entityType = entity.type.toLowerCase()
-
-  if (entityType === 'link') {
-    return <a href={entity.data.href} target={entity.data.target}>{originalText}</a>
-  } else if (entityType === 'color') {
-    return <span style={{color:entity.data.color}}>{originalText}</span>
-  } else if (entityType === 'bg-color') {
-    return <span style={{backgroundColor:entity.data.color}}>{originalText}</span>
-  }
-
-}
-
-const htmlToStyle = (props) => (nodeName, node, currentStyle) => {
+const htmlToStyle = (options) => (nodeName, node, currentStyle) => {
 
   if (!node || !node.style) {
     return currentStyle
   }
 
+  const unitImportFn = options.unitImportFn || defaultUnitImportFn
   let newStyle = currentStyle
 
   for (let i = 0; i < node.style.length; i++) {
@@ -393,17 +421,17 @@ const htmlToStyle = (props) => (nodeName, node, currentStyle) => {
       let color = getHexColor(node.style.backgroundColor)
       newStyle = color ? newStyle.add('BGCOLOR-' + color.replace('#', '').toUpperCase()) : newStyle
     } else if (nodeName === 'span' && node.style[i] === 'font-size') {
-      newStyle = newStyle.add('FONTSIZE-' + parseInt(node.style.fontSize, 10))
+      newStyle = newStyle.add('FONTSIZE-' + unitImportFn(node.style.fontSize, 'font-size'))
     } else if (nodeName === 'span' && node.style[i] === 'line-height') {
-      newStyle = newStyle.add('LINEHEIGHT-' + node.style.lineHeight)
+      newStyle = newStyle.add('LINEHEIGHT-' + unitImportFn(node.style.lineHeight, 'line-height'))
     } else if (nodeName === 'span' && node.style[i] === 'letter-spacing' && !isNaN(node.style.letterSpacing.replace('px', ''))) {
-      newStyle = newStyle.add('LETTERSPACING-' + parseInt(node.style.letterSpacing, 10))
-    } else if (nodeName === 'span' && (node.style[i] === 'padding-left' || node.style[i] === 'padding-right')) {
-      newStyle = newStyle.add('INDENT-' + parseInt(node.style.paddingLeft, 10))
+      newStyle = newStyle.add('LETTERSPACING-' + unitImportFn(node.style.letterSpacing, 'letter-spacing'))
+    } else if (nodeName === 'span' && node.style[i] === 'text-indent') {
+      newStyle = newStyle.add('TEXTINDENT-' + unitImportFn(node.style.textIndent, 'text-indent'))
     } else if (nodeName === 'span' && node.style[i] === 'text-decoration' && node.style.textDecoration === 'line-through') {
       newStyle = newStyle.add('STRIKETHROUGH')
     } else if (nodeName === 'span' && node.style[i] === 'font-family') {
-      let fontFamily = props.fontFamilies.find((item) => item.family.toLowerCase() === node.style.fontFamily.toLowerCase())
+      let fontFamily = options.fontFamilies.find((item) => item.family.toLowerCase() === node.style.fontFamily.toLowerCase())
       if (!fontFamily) continue;
       newStyle = newStyle.add('FONTFAMILY-' + fontFamily.name.toUpperCase())
     }
@@ -415,11 +443,19 @@ const htmlToStyle = (props) => (nodeName, node, currentStyle) => {
     newStyle = newStyle.add('SUBSCRIPT')
   } 
 
+  options.styleImportFn && (newStyle = options.styleImportFn(nodeName, node, currentStyle))
   return newStyle
 
 }
 
-const htmlToEntity = (nodeName, node, createEntity) => {
+const htmlToEntity = (options) => (nodeName, node, createEntity) => {
+
+  if (options && options.entityImportFn) {
+    const customInput = options.entityImportFn(nodeName, node, createEntity)
+    if (customInput) {
+      return customInput
+    }
+  }
 
   const { alt, title, id, controls, autoplay, loop, poster } = node
   let meta = {}
@@ -472,7 +508,14 @@ const htmlToEntity = (nodeName, node, createEntity) => {
 
 }
 
-const htmlToBlock = (nodeName, node) => {
+const htmlToBlock = (options) => (nodeName, node) => {
+
+  if (options && options.blockImportFn) {
+    const customInput = options.blockImportFn(nodeName, node)
+    if (customInput) {
+      return customInput
+    }
+  }
 
   let nodeStyle = node.style || {}
 
@@ -516,22 +559,22 @@ const htmlToBlock = (nodeName, node) => {
 
 }
 
-export const getToHTMLConfig = (options, contentState) => {
+export const getToHTMLConfig = (options) => {
 
   return {
     styleToHTML: styleToHTML(options),
-    entityToHTML: entityToHTML,
-    blockToHTML: blockToHTML(contentState)
+    entityToHTML: entityToHTML(options),
+    blockToHTML: blockToHTML(options)
   }
 
 }
 
-export const getFromHTMLConfig = (props) => {
+export const getFromHTMLConfig = (options) => {
 
   return { 
-    htmlToStyle: htmlToStyle(props),
-    htmlToEntity,
-    htmlToBlock 
+    htmlToStyle: htmlToStyle(options),
+    htmlToEntity: htmlToEntity(options),
+    htmlToBlock: htmlToBlock(options)
   }
 
 }
