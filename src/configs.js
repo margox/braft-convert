@@ -413,7 +413,7 @@ const blockToHTML = (options) => (block) => {
 
 }
 
-const htmlToStyle = (options) => (nodeName, node, currentStyle) => {
+const htmlToStyle = (options, source) => (nodeName, node, currentStyle) => {
 
   if (!node || !node.style) {
     return currentStyle
@@ -431,11 +431,11 @@ const htmlToStyle = (options) => (nodeName, node, currentStyle) => {
       let color = getHexColor(node.style.backgroundColor)
       newStyle = color ? newStyle.add('BGCOLOR-' + color.replace('#', '').toUpperCase()) : newStyle
     } else if (nodeName === 'span' && style === 'font-size') {
-      newStyle = newStyle.add('FONTSIZE-' + unitImportFn(node.style.fontSize, 'font-size'))
+      newStyle = newStyle.add('FONTSIZE-' + unitImportFn(node.style.fontSize, 'font-size', source))
     } else if (nodeName === 'span' && style === 'line-height') {
-      newStyle = newStyle.add('LINEHEIGHT-' + unitImportFn(node.style.lineHeight, 'line-height'))
+      newStyle = newStyle.add('LINEHEIGHT-' + unitImportFn(node.style.lineHeight, 'line-height', source))
     } else if (nodeName === 'span' && style === 'letter-spacing' && !isNaN(node.style.letterSpacing.replace('px', ''))) {
-      newStyle = newStyle.add('LETTERSPACING-' + unitImportFn(node.style.letterSpacing, 'letter-spacing'))
+      newStyle = newStyle.add('LETTERSPACING-' + unitImportFn(node.style.letterSpacing, 'letter-spacing', source))
     } else if (nodeName === 'span' && style === 'text-decoration' && node.style.textDecoration === 'line-through') {
       newStyle = newStyle.add('STRIKETHROUGH')
     } else if (nodeName === 'span' && style === 'font-family') {
@@ -452,15 +452,15 @@ const htmlToStyle = (options) => (nodeName, node, currentStyle) => {
     newStyle = newStyle.add('SUBSCRIPT')
   }
 
-  options.styleImportFn && (newStyle = options.styleImportFn(nodeName, node, newStyle) || newStyle)
+  options.styleImportFn && (newStyle = options.styleImportFn(nodeName, node, newStyle, source) || newStyle)
   return newStyle
 
 }
 
-const htmlToEntity = (options) => (nodeName, node, createEntity) => {
+const htmlToEntity = (options, source) => (nodeName, node, createEntity) => {
 
   if (options && options.entityImportFn) {
-    const customInput = options.entityImportFn(nodeName, node, createEntity)
+    const customInput = options.entityImportFn(nodeName, node, createEntity, source)
     if (customInput) {
       return customInput
     }
@@ -517,10 +517,10 @@ const htmlToEntity = (options) => (nodeName, node, createEntity) => {
 
 }
 
-const htmlToBlock = (options) => (nodeName, node) => {
+const htmlToBlock = (options, source) => (nodeName, node) => {
 
   if (options && options.blockImportFn) {
-    const customInput = options.blockImportFn(nodeName, node)
+    const customInput = options.blockImportFn(nodeName, node, source)
     if (customInput) {
       return customInput
     }
@@ -586,12 +586,12 @@ export const getToHTMLConfig = (options) => {
 
 }
 
-export const getFromHTMLConfig = (options) => {
+export const getFromHTMLConfig = (options, source = 'unknow') => {
 
   return { 
-    htmlToStyle: htmlToStyle(options),
-    htmlToEntity: htmlToEntity(options),
-    htmlToBlock: htmlToBlock(options)
+    htmlToStyle: htmlToStyle(options, source),
+    htmlToEntity: htmlToEntity(options, source),
+    htmlToBlock: htmlToBlock(options, source)
   }
 
 }

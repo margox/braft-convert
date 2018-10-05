@@ -21,12 +21,12 @@ export const convertRawToHTML = (rawContent, options) => {
 
 }
 
-export const convertHTMLToRaw = (HTMLString, options) => {
+export const convertHTMLToRaw = (HTMLString, options, source) => {
 
   options = { ...defaultConvertOptions, ...options }
 
   try {
-    const contentState = convertFromHTML(getFromHTMLConfig(options))(HTMLString)
+    const contentState = convertFromHTML(getFromHTMLConfig(options, source))(HTMLString)
     return convertToRaw(contentState)
   } catch (error) {
     console.warn(error)
@@ -50,12 +50,12 @@ export const convertEditorStateToHTML = (editorState, options) => {
 
 }
 
-export const convertHTMLToEditorState = (HTMLString, editorDecorators, options) => {
+export const convertHTMLToEditorState = (HTMLString, editorDecorators, options, source) => {
 
   options = { ...defaultConvertOptions, ...options }
 
   try {
-    return EditorState.createWithContent(convertFromHTML(getFromHTMLConfig(options))(HTMLString), editorDecorators)
+    return EditorState.createWithContent(convertFromHTML(getFromHTMLConfig(options, source))(HTMLString), editorDecorators)
   } catch (error) {
     console.warn(error)
     return EditorState.createEmpty(editorDecorators)

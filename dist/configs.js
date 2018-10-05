@@ -466,7 +466,7 @@ var blockToHTML = function blockToHTML(options) {
   };
 };
 
-var htmlToStyle = function htmlToStyle(options) {
+var htmlToStyle = function htmlToStyle(options, source) {
   return function (nodeName, node, currentStyle) {
 
     if (!node || !node.style) {
@@ -485,11 +485,11 @@ var htmlToStyle = function htmlToStyle(options) {
         var _color = getHexColor(node.style.backgroundColor);
         newStyle = _color ? newStyle.add('BGCOLOR-' + _color.replace('#', '').toUpperCase()) : newStyle;
       } else if (nodeName === 'span' && style === 'font-size') {
-        newStyle = newStyle.add('FONTSIZE-' + unitImportFn(node.style.fontSize, 'font-size'));
+        newStyle = newStyle.add('FONTSIZE-' + unitImportFn(node.style.fontSize, 'font-size', source));
       } else if (nodeName === 'span' && style === 'line-height') {
-        newStyle = newStyle.add('LINEHEIGHT-' + unitImportFn(node.style.lineHeight, 'line-height'));
+        newStyle = newStyle.add('LINEHEIGHT-' + unitImportFn(node.style.lineHeight, 'line-height', source));
       } else if (nodeName === 'span' && style === 'letter-spacing' && !isNaN(node.style.letterSpacing.replace('px', ''))) {
-        newStyle = newStyle.add('LETTERSPACING-' + unitImportFn(node.style.letterSpacing, 'letter-spacing'));
+        newStyle = newStyle.add('LETTERSPACING-' + unitImportFn(node.style.letterSpacing, 'letter-spacing', source));
       } else if (nodeName === 'span' && style === 'text-decoration' && node.style.textDecoration === 'line-through') {
         newStyle = newStyle.add('STRIKETHROUGH');
       } else if (nodeName === 'span' && style === 'font-family') {
@@ -507,16 +507,16 @@ var htmlToStyle = function htmlToStyle(options) {
       newStyle = newStyle.add('SUBSCRIPT');
     }
 
-    options.styleImportFn && (newStyle = options.styleImportFn(nodeName, node, newStyle) || newStyle);
+    options.styleImportFn && (newStyle = options.styleImportFn(nodeName, node, newStyle, source) || newStyle);
     return newStyle;
   };
 };
 
-var htmlToEntity = function htmlToEntity(options) {
+var htmlToEntity = function htmlToEntity(options, source) {
   return function (nodeName, node, createEntity) {
 
     if (options && options.entityImportFn) {
-      var customInput = options.entityImportFn(nodeName, node, createEntity);
+      var customInput = options.entityImportFn(nodeName, node, createEntity, source);
       if (customInput) {
         return customInput;
       }
@@ -583,11 +583,11 @@ var htmlToEntity = function htmlToEntity(options) {
   };
 };
 
-var htmlToBlock = function htmlToBlock(options) {
+var htmlToBlock = function htmlToBlock(options, source) {
   return function (nodeName, node) {
 
     if (options && options.blockImportFn) {
-      var customInput = options.blockImportFn(nodeName, node);
+      var customInput = options.blockImportFn(nodeName, node, source);
       if (customInput) {
         return customInput;
       }
@@ -649,11 +649,13 @@ var getToHTMLConfig = exports.getToHTMLConfig = function getToHTMLConfig(options
 };
 
 var getFromHTMLConfig = exports.getFromHTMLConfig = function getFromHTMLConfig(options) {
+  var source = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'unknow';
+
 
   return {
-    htmlToStyle: htmlToStyle(options),
-    htmlToEntity: htmlToEntity(options),
-    htmlToBlock: htmlToBlock(options)
+    htmlToStyle: htmlToStyle(options, source),
+    htmlToEntity: htmlToEntity(options, source),
+    htmlToBlock: htmlToBlock(options, source)
   };
 };
 //# sourceMappingURL=configs.js.map

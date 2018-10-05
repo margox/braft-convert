@@ -31,12 +31,12 @@ var convertRawToHTML = exports.convertRawToHTML = function convertRawToHTML(rawC
   }
 };
 
-var convertHTMLToRaw = exports.convertHTMLToRaw = function convertHTMLToRaw(HTMLString, options) {
+var convertHTMLToRaw = exports.convertHTMLToRaw = function convertHTMLToRaw(HTMLString, options, source) {
 
   options = _extends({}, defaultConvertOptions, options);
 
   try {
-    var contentState = (0, _draftConvert.convertFromHTML)((0, _configs.getFromHTMLConfig)(options))(HTMLString);
+    var contentState = (0, _draftConvert.convertFromHTML)((0, _configs.getFromHTMLConfig)(options, source))(HTMLString);
     return (0, _draftJs.convertToRaw)(contentState);
   } catch (error) {
     console.warn(error);
@@ -58,12 +58,12 @@ var convertEditorStateToHTML = exports.convertEditorStateToHTML = function conve
   }
 };
 
-var convertHTMLToEditorState = exports.convertHTMLToEditorState = function convertHTMLToEditorState(HTMLString, editorDecorators, options) {
+var convertHTMLToEditorState = exports.convertHTMLToEditorState = function convertHTMLToEditorState(HTMLString, editorDecorators, options, source) {
 
   options = _extends({}, defaultConvertOptions, options);
 
   try {
-    return _draftJs.EditorState.createWithContent((0, _draftConvert.convertFromHTML)((0, _configs.getFromHTMLConfig)(options))(HTMLString), editorDecorators);
+    return _draftJs.EditorState.createWithContent((0, _draftConvert.convertFromHTML)((0, _configs.getFromHTMLConfig)(options, source))(HTMLString), editorDecorators);
   } catch (error) {
     console.warn(error);
     return _draftJs.EditorState.createEmpty(editorDecorators);
