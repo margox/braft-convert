@@ -432,12 +432,16 @@ const htmlToStyle = (options, source) => (nodeName, node, currentStyle) => {
       newStyle = color ? newStyle.add('BGCOLOR-' + color.replace('#', '').toUpperCase()) : newStyle
     } else if (nodeName === 'span' && style === 'font-size') {
       newStyle = newStyle.add('FONTSIZE-' + unitImportFn(node.style.fontSize, 'font-size', source))
-    } else if (nodeName === 'span' && style === 'line-height') {
+    } else if (nodeName === 'span' && style === 'line-height' && !isNaN(parseFloat(node.style.lineHeight, 10))) {
       newStyle = newStyle.add('LINEHEIGHT-' + unitImportFn(node.style.lineHeight, 'line-height', source))
-    } else if (nodeName === 'span' && style === 'letter-spacing' && !isNaN(node.style.letterSpacing.replace('px', ''))) {
+    } else if (nodeName === 'span' && style === 'letter-spacing' && !isNaN(parseFloat(node.style.letterSpacing, 10))) {
       newStyle = newStyle.add('LETTERSPACING-' + unitImportFn(node.style.letterSpacing, 'letter-spacing', source))
-    } else if (nodeName === 'span' && style === 'text-decoration' && node.style.textDecoration === 'line-through') {
-      newStyle = newStyle.add('STRIKETHROUGH')
+    } else if (nodeName === 'span' && style === 'text-decoration') {
+      if (node.style.textDecoration === 'line-through') {
+        newStyle = newStyle.add('STRIKETHROUGH')
+      } else if (node.style.textDecoration === 'underline') {
+        newStyle = newStyle.add('UNDERLINE')
+      }
     } else if (nodeName === 'span' && style === 'font-family') {
       let fontFamily = options.fontFamilies.find((item) => item.family.toLowerCase() === node.style.fontFamily.toLowerCase())
       if (!fontFamily) return;
@@ -465,6 +469,8 @@ const htmlToEntity = (options, source) => (nodeName, node, createEntity) => {
       return customInput
     }
   }
+
+  nodeName = nodeName.toLowerCase()
 
   const { alt, title, id, controls, autoplay, loop, poster } = node
   let meta = {}
