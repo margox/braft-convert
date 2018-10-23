@@ -420,30 +420,37 @@ var blockToHTML = function blockToHTML(options) {
       var previousBlockType = previousBlock && previousBlock.getType();
       var nextBlockType = nextBlock && nextBlock.getType();
 
-      if (previousBlockType !== 'code-block' && nextBlockType !== 'code-block') {
+      if (previousBlockType !== 'code-block' && nextBlockType === 'code-block') {
         return {
-          start: '<pre>',
-          end: '</pre>'
+          start: '<pre><code>',
+          end: '</code>'
+        };
+      }
+
+      if (previousBlockType === 'code-block' && nextBlockType !== 'code-block') {
+        return {
+          start: '<code>',
+          end: '</code></pre>'
         };
       }
 
       if (previousBlockType !== 'code-block') {
         return {
-          start: '<pre>',
-          end: '<br/>'
+          start: '<pre><code>',
+          end: '</code></pre>'
         };
       }
 
       if (nextBlockType !== 'code-block') {
         return {
-          start: '',
-          end: '</pre>'
+          start: '<pre><code>',
+          end: '</code></pre>'
         };
       }
 
       return {
-        start: '',
-        end: '<br/>'
+        start: '<code>',
+        end: '</code>'
       };
     } else if (blocks[blockType]) {
       return {
@@ -623,6 +630,14 @@ var htmlToBlock = function htmlToBlock(options, source) {
 
       return {
         type: 'atomic',
+        data: {}
+      };
+    } else if (nodeName === 'pre') {
+
+      node.innerHTML = node.innerHTML.replace(/<\/code><code>/g, '<br/>').replace(/<code>/g, '').replace(/<\/code>/g, '');
+
+      return {
+        type: 'code-block',
         data: {}
       };
     } else if ((nodeStyle.textAlign || nodeStyle.textIndent) && blockNames.indexOf(nodeName) > -1) {
