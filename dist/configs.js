@@ -634,7 +634,7 @@ var htmlToBlock = function htmlToBlock(options, source) {
       };
     } else if (nodeName === 'pre') {
 
-      node.innerHTML = node.innerHTML.replace(/<\/code><code>/g, '<br/>').replace(/<code>/g, '').replace(/<\/code>/g, '');
+      node.innerHTML = node.innerHTML.replace(/<\/code><code(.*?)>/g, '<br/>').replace(/<code(.*?)>/g, '').replace(/<\/code>/g, '');
 
       return {
         type: 'code-block',
