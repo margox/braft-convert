@@ -366,38 +366,22 @@ const blockToHTML = (options) => (block) => {
     const previousBlockType = previousBlock && previousBlock.getType()
     const nextBlockType = nextBlock && nextBlock.getType()
 
-    if (previousBlockType !== 'code-block' && nextBlockType === 'code-block') {
-      return {
-        start: '<pre><code>',
-        end: '</code>'
-      }
-    }
-
-    if (previousBlockType === 'code-block' && nextBlockType !== 'code-block') {
-      return {
-        start: '<code>',
-        end: '</code></pre>'
-      }
-    }
+    let start = ''
+    let end = ''
 
     if (previousBlockType !== 'code-block') {
-      return {
-        start: '<pre><code>',
-        end: '</code></pre>'
-      }
+      start = '<pre><code>'
+    } else {
+      start = ''
     }
 
     if (nextBlockType !== 'code-block') {
-      return {
-        start: '<pre><code>',
-        end: '</code></pre>'
-      }
+      end = '</code></pre>'
+    } else {
+      end = '<br/>'
     }
 
-    return {
-      start: '<code>',
-      end: '</code>'
-    }
+    return { start, end }
 
   } else if (blocks[blockType]) {
     return {
@@ -570,8 +554,7 @@ const htmlToBlock = (options, source) => (nodeName, node) => {
 
   } else if (nodeName === 'pre') {
 
-    
-    node.innerHTML = node.innerHTML.replace(/<\/code><code(.*?)>/g, '<br/>').replace(/<code(.*?)>/g, '').replace(/<\/code>/g, '')
+    node.innerHTML = node.innerHTML.replace(/<code(.*?)>/g, '').replace(/<\/code>/g, '')
 
     return {
       type: 'code-block',
