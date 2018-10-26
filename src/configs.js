@@ -225,7 +225,7 @@ const convertAtomicBlock = (block, contentState) => {
   const mediaType = entity.getType().toLowerCase()
 
   let { float, alignment } = block.data
-  let { src, url, link, link_target, width, height, meta } = entity.getData()
+  let { url, link, link_target, width, height, meta } = entity.getData()
 
   if (mediaType === 'image') {
 
@@ -244,24 +244,24 @@ const convertAtomicBlock = (block, contentState) => {
       return (
         <div className={"media-wrap image-wrap" + styledClassName} style={imageWrapStyle}>
           <a style={{display:'inline-block'}} href={link} target={link_target}>
-            <img {...meta} src={src || url} width={width} height={height} style={{width, height}} />
+            <img {...meta} src={url} width={width} height={height} style={{width, height}} />
           </a>
         </div>
       )
     } else {
       return (
         <div className={"media-wrap image-wrap" + styledClassName} style={imageWrapStyle}>
-          <img {...meta} src={src || url} width={width} height={height} style={{width, height}}/>
+          <img {...meta} src={url} width={width} height={height} style={{width, height}}/>
         </div>
       )
     }
 
   } else if (mediaType === 'audio') {
-    return <div className="media-wrap audio-wrap"><audio controls {...meta} src={src || url} /></div>
+    return <div className="media-wrap audio-wrap"><audio controls {...meta} src={url} /></div>
   } else if (mediaType === 'video') {
-    return <div className="media-wrap video-wrap"><video controls {...meta} src={src || url} width={width} height={height} /></div>
+    return <div className="media-wrap video-wrap"><video controls {...meta} src={url} width={width} height={height} /></div>
   } else if (mediaType === 'embed') {
-    return <div className="media-wrap embed-wrap"><div dangerouslySetInnerHTML={{__html: src || url}}/></div>
+    return <div className="media-wrap embed-wrap"><div dangerouslySetInnerHTML={{__html: url}}/></div>
   } else if (mediaType === 'hr') {
     return <hr></hr>
   } else {
@@ -478,16 +478,16 @@ const htmlToEntity = (options, source) => (nodeName, node, createEntity) => {
     let { href, target } = node
     return createEntity('LINK', 'MUTABLE',{ href, target })
   } else if (nodeName === 'audio') {
-    return createEntity('AUDIO', 'IMMUTABLE',{ src: node.getAttribute('src'), meta }) 
+    return createEntity('AUDIO', 'IMMUTABLE',{ url: node.getAttribute('src'), meta }) 
   } else if (nodeName === 'video') {
-    return createEntity('VIDEO', 'IMMUTABLE',{ src: node.getAttribute('src'), meta }) 
+    return createEntity('VIDEO', 'IMMUTABLE',{ url: node.getAttribute('src'), meta }) 
   } else if (nodeName === 'img') {
 
     let parentNode = node.parentNode
     let entityData = { meta }
     let { width, height } = node.style
 
-    entityData.src = node.getAttribute('src')
+    entityData.url = node.getAttribute('src')
     width && (entityData.width = width)
     height && (entityData.height = height)
 
@@ -506,7 +506,7 @@ const htmlToEntity = (options, source) => (nodeName, node, createEntity) => {
 
     if (embedContent) {
       return createEntity('EMBED', 'IMMUTABLE', {
-        src: embedContent
+        url: embedContent
       })   
     }
 
