@@ -570,7 +570,7 @@ const htmlToBlock = (options, source) => (nodeName, node) => {
     }
 
     if (nodeStyle.textIndent) {
-      blockData.textIndent = Math.ceil(parseInt(nodeStyle.textIndent, 10) / 2)
+      blockData.textIndent = /^\d+em$/.test(nodeStyle.textIndent) ? Math.ceil(parseInt(nodeStyle.textIndent, 10) / 2) : 1
     }
 
     return {
