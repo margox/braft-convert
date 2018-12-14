@@ -212,7 +212,7 @@ var blocks = exports.blocks = {
   'header-two': 'h2',
   'header-three': 'h3',
   'header-four': 'h4',
-  'header-fiv': 'h5',
+  'header-five': 'h5',
   'header-six': 'h6',
   'unstyled': 'p',
   'blockquote': 'blockquote'
