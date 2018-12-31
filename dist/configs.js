@@ -387,12 +387,14 @@ var blockToHTML = function blockToHTML(options) {
       }
     }
 
-    var blockStyle = '';
+    var blockStyle = '',
+        blockClass = '';
 
     var blockType = block.type.toLowerCase();
     var _block$data2 = block.data,
         textAlign = _block$data2.textAlign,
-        textIndent = _block$data2.textIndent;
+        textIndent = _block$data2.textIndent,
+        className = _block$data2.className;
 
 
     if (textAlign || textIndent) {
@@ -408,6 +410,10 @@ var blockToHTML = function blockToHTML(options) {
       }
 
       blockStyle += '"';
+    }
+
+    if (className) {
+      blockClass = " class=\"" + className + "\"";
     }
 
     if (blockType === 'atomic') {
@@ -437,7 +443,7 @@ var blockToHTML = function blockToHTML(options) {
       return { start: start, end: end };
     } else if (blocks[blockType]) {
       return {
-        start: "<" + blocks[blockType] + blockStyle + ">",
+        start: "<" + blocks[blockType] + blockStyle + blockClass + ">",
         end: "</" + blocks[blockType] + ">"
       };
     } else if (blockType === 'unordered-list-item') {
@@ -623,7 +629,7 @@ var htmlToBlock = function htmlToBlock(options, source) {
         type: 'code-block',
         data: {}
       };
-    } else if ((nodeStyle.textAlign || nodeStyle.textIndent) && blockNames.indexOf(nodeName) > -1) {
+    } else if ((nodeStyle.textAlign || nodeStyle.textIndent || node.className) && blockNames.indexOf(nodeName) > -1) {
 
       var blockData = {};
 
@@ -633,6 +639,10 @@ var htmlToBlock = function htmlToBlock(options, source) {
 
       if (nodeStyle.textIndent) {
         blockData.textIndent = /^\d+em$/.test(nodeStyle.textIndent) ? Math.ceil(parseInt(nodeStyle.textIndent, 10) / 2) : 1;
+      }
+
+      if (node.className) {
+        blockData.className = node.className;
       }
 
       return {
