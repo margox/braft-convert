@@ -336,10 +336,10 @@ const blockToHTML = (options) => (block) => {
     }
   }
 
-  let blockStyle = ''
+  let blockStyle = '', blockClass = '';
 
   const blockType = block.type.toLowerCase()
-  const { textAlign, textIndent } = block.data
+  const { textAlign, textIndent, className } = block.data
 
   if (textAlign || textIndent) {
 
@@ -355,6 +355,10 @@ const blockToHTML = (options) => (block) => {
 
     blockStyle += '"'
 
+  }
+
+  if (className) {
+    blockClass = ` class="${className}"`
   }
 
   if (blockType === 'atomic') {
@@ -385,7 +389,7 @@ const blockToHTML = (options) => (block) => {
 
   } else if (blocks[blockType]) {
     return {
-      start: `<${blocks[blockType]}${blockStyle}>`,
+      start: `<${blocks[blockType]}${blockStyle}${blockClass}>`,
       end: `</${blocks[blockType]}>`
     }
   } else if (blockType === 'unordered-list-item') {
@@ -561,7 +565,7 @@ const htmlToBlock = (options, source) => (nodeName, node) => {
       data: {}
     }
 
-  } else if ((nodeStyle.textAlign || nodeStyle.textIndent) && blockNames.indexOf(nodeName) > -1) {
+  } else if ((nodeStyle.textAlign || nodeStyle.textIndent || node.className) && blockNames.indexOf(nodeName) > -1) {
 
     const blockData = {}
 
@@ -571,6 +575,10 @@ const htmlToBlock = (options, source) => (nodeName, node) => {
 
     if (nodeStyle.textIndent) {
       blockData.textIndent = /^\d+em$/.test(nodeStyle.textIndent) ? Math.ceil(parseInt(nodeStyle.textIndent, 10) / 2) : 1
+    }
+
+    if (node.className) {
+      blockData.className = node.className;
     }
 
     return {
