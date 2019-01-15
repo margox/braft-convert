@@ -325,11 +325,7 @@ var entityToHTML = function entityToHTML(options) {
     }
 
     if (entityType === 'link') {
-      return _react2.default.createElement(
-        "a",
-        { href: entity.data.href, target: entity.data.target },
-        originalText
-      );
+      return _react2.default.createElement("a", { href: entity.data.href, target: entity.data.target });
     }
   };
 };

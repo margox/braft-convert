@@ -283,7 +283,7 @@ const entityToHTML = (options) => (entity, originalText) => {
   }
 
   if (entityType === 'link') {
-    return <a href={entity.data.href} target={entity.data.target}>{originalText}</a>
+    return <a href={entity.data.href} target={entity.data.target} />
   }
 
 }
