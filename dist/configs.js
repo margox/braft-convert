@@ -167,6 +167,16 @@ var defaultUnitImportFn = function defaultUnitImportFn(unit) {
   return unit.replace('px', '');
 };
 
+var ignoredNodeAttributes = ['style'];
+var ignoredEntityNodeAttributes = ['style', 'href', 'target', 'alt', 'title', 'id', 'controls', 'autoplay', 'loop', 'poster'];
+
+var spreadNodeAttributes = function spreadNodeAttributes(attributesObject) {
+  attributesObject = attributesObject || {};
+  return Object.keys(attributesObject).reduce(function (attributeString, attributeName) {
+    return attributeString + " " + attributeName + "=\"" + attributesObject[attributeName] + "\"";
+  }, ' ');
+};
+
 var defaultFontFamilies = exports.defaultFontFamilies = [{
   name: 'Araial',
   family: 'Arial, Helvetica, sans-serif'
@@ -229,6 +239,7 @@ var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
     return _react2.default.createElement("p", null);
   }
 
+  var blockNodeAttributes = block.data.nodeAttributes || {};
   var contentBlock = contentState.getBlockForKey(block.key);
 
   if (!contentBlock) {
@@ -276,27 +287,27 @@ var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
         _react2.default.createElement(
           "a",
           { style: { display: 'inline-block' }, href: link, target: link_target },
-          _react2.default.createElement("img", _extends({}, meta, { src: url, width: width, height: height, style: { width: width, height: height } }))
+          _react2.default.createElement("img", _extends({}, blockNodeAttributes, meta, { src: url, width: width, height: height, style: { width: width, height: height } }))
         )
       );
     } else {
       return _react2.default.createElement(
         "div",
         { className: "media-wrap image-wrap" + styledClassName, style: imageWrapStyle },
-        _react2.default.createElement("img", _extends({}, meta, { src: url, width: width, height: height, style: { width: width, height: height } }))
+        _react2.default.createElement("img", _extends({}, blockNodeAttributes, meta, { src: url, width: width, height: height, style: { width: width, height: height } }))
       );
     }
   } else if (mediaType === 'audio') {
     return _react2.default.createElement(
       "div",
       { className: "media-wrap audio-wrap" },
-      _react2.default.createElement("audio", _extends({ controls: true }, meta, { src: url }))
+      _react2.default.createElement("audio", _extends({ controls: true }, blockNodeAttributes, meta, { src: url }))
     );
   } else if (mediaType === 'video') {
     return _react2.default.createElement(
       "div",
       { className: "media-wrap video-wrap" },
-      _react2.default.createElement("video", _extends({ controls: true }, meta, { src: url, width: width, height: height }))
+      _react2.default.createElement("video", _extends({ controls: true }, blockNodeAttributes, meta, { src: url, width: width, height: height }))
     );
   } else if (mediaType === 'embed') {
     return _react2.default.createElement(
@@ -325,7 +336,7 @@ var entityToHTML = function entityToHTML(options) {
     }
 
     if (entityType === 'link') {
-      return _react2.default.createElement("a", { href: entity.data.href, target: entity.data.target });
+      return _react2.default.createElement("a", _extends({ href: entity.data.href, target: entity.data.target }, entity.data.nodeAttributes));
     }
   };
 };
@@ -383,15 +394,15 @@ var blockToHTML = function blockToHTML(options) {
       }
     }
 
-    var blockStyle = '',
-        blockClass = '';
+    var blockStyle = '';
 
     var blockType = block.type.toLowerCase();
     var _block$data2 = block.data,
         textAlign = _block$data2.textAlign,
         textIndent = _block$data2.textIndent,
-        className = _block$data2.className;
+        nodeAttributes = _block$data2.nodeAttributes;
 
+    var attributeString = spreadNodeAttributes(nodeAttributes);
 
     if (textAlign || textIndent) {
 
@@ -408,12 +419,8 @@ var blockToHTML = function blockToHTML(options) {
       blockStyle += '"';
     }
 
-    if (className) {
-      blockClass = " class=\"" + className + "\"";
-    }
-
     if (blockType === 'atomic') {
-      return convertAtomicBlock(block, contentState);
+      return convertAtomicBlock(block, attributeString, contentState);
     } else if (blockType === 'code-block') {
 
       var previousBlock = contentState.getBlockBefore(block.key);
@@ -425,7 +432,7 @@ var blockToHTML = function blockToHTML(options) {
       var end = '';
 
       if (previousBlockType !== 'code-block') {
-        start = '<pre><code>';
+        start = "<pre " + attributeString + "><code>";
       } else {
         start = '';
       }
@@ -439,18 +446,18 @@ var blockToHTML = function blockToHTML(options) {
       return { start: start, end: end };
     } else if (blocks[blockType]) {
       return {
-        start: "<" + blocks[blockType] + blockStyle + blockClass + ">",
+        start: "<" + blocks[blockType] + blockStyle + attributeString + ">",
         end: "</" + blocks[blockType] + ">"
       };
     } else if (blockType === 'unordered-list-item') {
       return {
-        start: "<li" + blockStyle + ">",
+        start: "<li" + blockStyle + attributeString + ">",
         end: '</li>',
         nest: _react2.default.createElement("ul", null)
       };
     } else if (blockType === 'ordered-list-item') {
       return {
-        start: "<li" + blockStyle + ">",
+        start: "<li" + blockStyle + attributeString + ">",
         end: '</li>',
         nest: _react2.default.createElement("ol", null)
       };
@@ -526,9 +533,12 @@ var htmlToEntity = function htmlToEntity(options, source) {
         controls = node.controls,
         autoplay = node.autoplay,
         loop = node.loop,
-        poster = node.poster;
+        poster = node.poster,
+        href = node.href,
+        target = node.target;
 
     var meta = {};
+    var nodeAttributes = {};
 
     id && (meta.id = id);
     alt && (meta.alt = alt);
@@ -538,15 +548,37 @@ var htmlToEntity = function htmlToEntity(options, source) {
     loop && (meta.loop = loop);
     poster && (meta.poster = poster);
 
-    if (nodeName === 'a' && !node.querySelectorAll('img').length) {
-      var href = node.href,
-          target = node.target;
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
 
-      return createEntity('LINK', 'MUTABLE', { href: href, target: target });
+    try {
+      for (var _iterator = node.attributes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var attr = _step.value;
+
+        ignoredEntityNodeAttributes.indexOf(attr.name) === -1 && (nodeAttributes[attr.name] = attr.value);
+      }
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator.return) {
+          _iterator.return();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
+      }
+    }
+
+    if (nodeName === 'a' && !node.querySelectorAll('img').length) {
+      return createEntity('LINK', 'MUTABLE', { href: href, target: target, nodeAttributes: nodeAttributes });
     } else if (nodeName === 'audio') {
-      return createEntity('AUDIO', 'IMMUTABLE', { url: node.getAttribute('src'), meta: meta });
+      return createEntity('AUDIO', 'IMMUTABLE', { url: node.getAttribute('src'), meta: meta, nodeAttributes: nodeAttributes });
     } else if (nodeName === 'video') {
-      return createEntity('VIDEO', 'IMMUTABLE', { url: node.getAttribute('src'), meta: meta });
+      return createEntity('VIDEO', 'IMMUTABLE', { url: node.getAttribute('src'), meta: meta, nodeAttributes: nodeAttributes });
     } else if (nodeName === 'img') {
 
       var parentNode = node.parentNode;
@@ -591,13 +623,40 @@ var htmlToBlock = function htmlToBlock(options, source) {
       }
     }
 
+    var nodeAttributes = {};
     var nodeStyle = node.style || {};
+
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
+
+    try {
+      for (var _iterator2 = node.attributes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+        var attr = _step2.value;
+
+        ignoredNodeAttributes.indexOf(attr.name) === -1 && (nodeAttributes[attr.name] = attr.value);
+      }
+    } catch (err) {
+      _didIteratorError2 = true;
+      _iteratorError2 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion2 && _iterator2.return) {
+          _iterator2.return();
+        }
+      } finally {
+        if (_didIteratorError2) {
+          throw _iteratorError2;
+        }
+      }
+    }
 
     if (node.classList && node.classList.contains('media-wrap')) {
 
       return {
         type: 'atomic',
         data: {
+          nodeAttributes: nodeAttributes,
           float: nodeStyle.float,
           alignment: nodeStyle.textAlign
         }
@@ -607,6 +666,7 @@ var htmlToBlock = function htmlToBlock(options, source) {
       return {
         type: 'atomic',
         data: {
+          nodeAttributes: nodeAttributes,
           float: nodeStyle.float,
           alignment: nodeStyle.textAlign
         }
@@ -615,7 +675,7 @@ var htmlToBlock = function htmlToBlock(options, source) {
 
       return {
         type: 'atomic',
-        data: {}
+        data: { nodeAttributes: nodeAttributes }
       };
     } else if (nodeName === 'pre') {
 
@@ -623,11 +683,11 @@ var htmlToBlock = function htmlToBlock(options, source) {
 
       return {
         type: 'code-block',
-        data: {}
+        data: { nodeAttributes: nodeAttributes }
       };
-    } else if ((nodeStyle.textAlign || nodeStyle.textIndent || node.className) && blockNames.indexOf(nodeName) > -1) {
+    } else if (blockNames.indexOf(nodeName) !== -1) {
 
-      var blockData = {};
+      var blockData = { nodeAttributes: nodeAttributes };
 
       if (nodeStyle.textAlign) {
         blockData.textAlign = nodeStyle.textAlign;
@@ -635,10 +695,6 @@ var htmlToBlock = function htmlToBlock(options, source) {
 
       if (nodeStyle.textIndent) {
         blockData.textIndent = /^\d+em$/.test(nodeStyle.textIndent) ? Math.ceil(parseInt(nodeStyle.textIndent, 10) / 2) : 1;
-      }
-
-      if (node.className) {
-        blockData.className = node.className;
       }
 
       return {

@@ -148,6 +148,16 @@ const getStyleValue = style => style.split('-')[1]
 const defaultUnitExportFn = unit => unit + 'px'
 const defaultUnitImportFn = unit => unit.replace('px', '')
 
+const ignoredNodeAttributes = ['style']
+const ignoredEntityNodeAttributes = ['style', 'href', 'target', 'alt', 'title', 'id', 'controls', 'autoplay', 'loop', 'poster']
+
+const spreadNodeAttributes = (attributesObject) => {
+  attributesObject = attributesObject || {}
+  return Object.keys(attributesObject).reduce((attributeString, attributeName) => {
+    return `${attributeString} ${attributeName}="${attributesObject[attributeName]}"`
+  }, ' ')
+}
+
 export const defaultFontFamilies = [{
     name: 'Araial',
     family: 'Arial, Helvetica, sans-serif'
@@ -209,6 +219,7 @@ const convertAtomicBlock = (block, contentState) => {
     return <p></p>
   }
 
+  const blockNodeAttributes = block.data.nodeAttributes || {}
   const contentBlock = contentState.getBlockForKey(block.key)
 
   if (!contentBlock) {
@@ -244,22 +255,22 @@ const convertAtomicBlock = (block, contentState) => {
       return (
         <div className={"media-wrap image-wrap" + styledClassName} style={imageWrapStyle}>
           <a style={{display:'inline-block'}} href={link} target={link_target}>
-            <img {...meta} src={url} width={width} height={height} style={{width, height}} />
+            <img {...blockNodeAttributes} {...meta} src={url} width={width} height={height} style={{width, height}} />
           </a>
         </div>
       )
     } else {
       return (
         <div className={"media-wrap image-wrap" + styledClassName} style={imageWrapStyle}>
-          <img {...meta} src={url} width={width} height={height} style={{width, height}}/>
+          <img {...blockNodeAttributes} {...meta} src={url} width={width} height={height} style={{width, height}}/>
         </div>
       )
     }
 
   } else if (mediaType === 'audio') {
-    return <div className="media-wrap audio-wrap"><audio controls {...meta} src={url} /></div>
+    return <div className="media-wrap audio-wrap"><audio controls {...blockNodeAttributes} {...meta} src={url} /></div>
   } else if (mediaType === 'video') {
-    return <div className="media-wrap video-wrap"><video controls {...meta} src={url} width={width} height={height} /></div>
+    return <div className="media-wrap video-wrap"><video controls {...blockNodeAttributes} {...meta} src={url} width={width} height={height} /></div>
   } else if (mediaType === 'embed') {
     return <div className="media-wrap embed-wrap"><div dangerouslySetInnerHTML={{__html: url}}/></div>
   } else if (mediaType === 'hr') {
@@ -283,7 +294,7 @@ const entityToHTML = (options) => (entity, originalText) => {
   }
 
   if (entityType === 'link') {
-    return <a href={entity.data.href} target={entity.data.target} />
+    return <a href={entity.data.href} target={entity.data.target} {...entity.data.nodeAttributes}/>
   }
 
 }
@@ -336,10 +347,11 @@ const blockToHTML = (options) => (block) => {
     }
   }
 
-  let blockStyle = '', blockClass = '';
+  let blockStyle = ''
 
   const blockType = block.type.toLowerCase()
-  const { textAlign, textIndent, className } = block.data
+  const { textAlign, textIndent, nodeAttributes } = block.data
+  const attributeString = spreadNodeAttributes(nodeAttributes)
 
   if (textAlign || textIndent) {
 
@@ -357,12 +369,8 @@ const blockToHTML = (options) => (block) => {
 
   }
 
-  if (className) {
-    blockClass = ` class="${className}"`
-  }
-
   if (blockType === 'atomic') {
-    return convertAtomicBlock(block, contentState)
+    return convertAtomicBlock(block, attributeString, contentState)
   } else if (blockType === 'code-block') {
 
     const previousBlock = contentState.getBlockBefore(block.key)
@@ -374,7 +382,7 @@ const blockToHTML = (options) => (block) => {
     let end = ''
 
     if (previousBlockType !== 'code-block') {
-      start = '<pre><code>'
+      start = `<pre ${attributeString}><code>`
     } else {
       start = ''
     }
@@ -389,18 +397,18 @@ const blockToHTML = (options) => (block) => {
 
   } else if (blocks[blockType]) {
     return {
-      start: `<${blocks[blockType]}${blockStyle}${blockClass}>`,
+      start: `<${blocks[blockType]}${blockStyle}${attributeString}>`,
       end: `</${blocks[blockType]}>`
     }
   } else if (blockType === 'unordered-list-item') {
     return {
-      start: `<li${blockStyle}>`,
+      start: `<li${blockStyle}${attributeString}>`,
       end: '</li>',
       nest: <ul/>
     }
   } else if (blockType === 'ordered-list-item') {
     return {
-      start: `<li${blockStyle}>`,
+      start: `<li${blockStyle}${attributeString}>`,
       end: '</li>',
       nest: <ol/>
     }
@@ -467,8 +475,9 @@ const htmlToEntity = (options, source) => (nodeName, node, createEntity) => {
 
   nodeName = nodeName.toLowerCase()
 
-  const { alt, title, id, controls, autoplay, loop, poster } = node
+  const { alt, title, id, controls, autoplay, loop, poster, href, target } = node
   let meta = {}
+  let nodeAttributes = {}
 
   id && (meta.id = id)
   alt && (meta.alt = alt)
@@ -478,13 +487,16 @@ const htmlToEntity = (options, source) => (nodeName, node, createEntity) => {
   loop && (meta.loop = loop)
   poster && (meta.poster = poster)
 
+  for (let attr of node.attributes) {
+    (ignoredEntityNodeAttributes.indexOf(attr.name) === -1) && (nodeAttributes[attr.name] = attr.value)
+  }
+
   if (nodeName === 'a' && !node.querySelectorAll('img').length) {
-    let { href, target } = node
-    return createEntity('LINK', 'MUTABLE',{ href, target })
+    return createEntity('LINK', 'MUTABLE',{ href, target, nodeAttributes })
   } else if (nodeName === 'audio') {
-    return createEntity('AUDIO', 'IMMUTABLE',{ url: node.getAttribute('src'), meta }) 
+    return createEntity('AUDIO', 'IMMUTABLE',{ url: node.getAttribute('src'), meta, nodeAttributes }) 
   } else if (nodeName === 'video') {
-    return createEntity('VIDEO', 'IMMUTABLE',{ url: node.getAttribute('src'), meta }) 
+    return createEntity('VIDEO', 'IMMUTABLE',{ url: node.getAttribute('src'), meta, nodeAttributes }) 
   } else if (nodeName === 'img') {
 
     let parentNode = node.parentNode
@@ -527,13 +539,19 @@ const htmlToBlock = (options, source) => (nodeName, node) => {
     }
   }
 
+  let nodeAttributes = {}
   let nodeStyle = node.style || {}
+
+  for (let attr of node.attributes) {
+    (ignoredNodeAttributes.indexOf(attr.name) === -1) && (nodeAttributes[attr.name] = attr.value)
+  }
 
   if (node.classList && node.classList.contains('media-wrap')) {
 
     return {
       type: 'atomic',
       data: {
+        nodeAttributes: nodeAttributes,
         float: nodeStyle.float,
         alignment: nodeStyle.textAlign
       }
@@ -544,6 +562,7 @@ const htmlToBlock = (options, source) => (nodeName, node) => {
     return {
       type: 'atomic',
       data: {
+        nodeAttributes: nodeAttributes,
         float: nodeStyle.float,
         alignment: nodeStyle.textAlign
       }
@@ -553,7 +572,7 @@ const htmlToBlock = (options, source) => (nodeName, node) => {
 
     return {
       type: 'atomic',
-      data: {}
+      data: { nodeAttributes }
     }
 
   } else if (nodeName === 'pre') {
@@ -562,12 +581,12 @@ const htmlToBlock = (options, source) => (nodeName, node) => {
 
     return {
       type: 'code-block',
-      data: {}
+      data: { nodeAttributes }
     }
 
-  } else if ((nodeStyle.textAlign || nodeStyle.textIndent || node.className) && blockNames.indexOf(nodeName) > -1) {
+  } else if (blockNames.indexOf(nodeName) !== -1) {
 
-    const blockData = {}
+    const blockData = { nodeAttributes }
 
     if (nodeStyle.textAlign) {
       blockData.textAlign = nodeStyle.textAlign
@@ -575,10 +594,6 @@ const htmlToBlock = (options, source) => (nodeName, node) => {
 
     if (nodeStyle.textIndent) {
       blockData.textIndent = /^\d+em$/.test(nodeStyle.textIndent) ? Math.ceil(parseInt(nodeStyle.textIndent, 10) / 2) : 1
-    }
-
-    if (node.className) {
-      blockData.className = node.className;
     }
 
     return {
