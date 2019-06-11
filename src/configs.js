@@ -283,7 +283,7 @@ const entityToHTML = (options) => (entity, originalText) => {
   }
 
   if (entityType === 'link') {
-    return <a href={entity.data.href} target={entity.data.target}>{originalText}</a>
+    return <a href={entity.data.href} target={entity.data.target}><span dangerouslySetInnerHTML={{__html: originalText}}></span></a>
   }
 
 }
@@ -479,7 +479,8 @@ const htmlToEntity = (options, source) => (nodeName, node, createEntity) => {
   poster && (meta.poster = poster)
 
   if (nodeName === 'a' && !node.querySelectorAll('img').length) {
-    let { href, target } = node
+    let href = node.getAttribute('href')
+    let target = node.getAttribute('target')
     return createEntity('LINK', 'MUTABLE',{ href, target })
   } else if (nodeName === 'audio') {
     return createEntity('AUDIO', 'IMMUTABLE',{ url: node.getAttribute('src'), meta }) 
@@ -496,8 +497,8 @@ const htmlToEntity = (options, source) => (nodeName, node, createEntity) => {
     height && (entityData.height = height)
 
     if (parentNode.nodeName.toLowerCase() === 'a') {
-      entityData.link = parentNode.href
-      entityData.link_target = parentNode.target
+      entityData.link = parentNode.getAttribute('href')
+      entityData.link_target = parentNode.getAttribute('target')
     }
 
     return createEntity('IMAGE', 'IMMUTABLE', entityData) 

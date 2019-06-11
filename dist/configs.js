@@ -328,7 +328,7 @@ var entityToHTML = function entityToHTML(options) {
       return _react2.default.createElement(
         "a",
         { href: entity.data.href, target: entity.data.target },
-        originalText
+        _react2.default.createElement("span", { dangerouslySetInnerHTML: { __html: originalText } })
       );
     }
   };
