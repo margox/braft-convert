@@ -48,14 +48,14 @@ var convertEditorStateToHTML = exports.convertEditorStateToHTML = function conve
 
   options = _extends({}, defaultConvertOptions, options);
 
-  // try {
-  var contentState = editorState.getCurrentContent();
-  options.contentState = contentState;
-  return (0, _draftConvert.convertToHTML)((0, _configs.getToHTMLConfig)(options))(contentState);
-  // } catch (error) {
-  // console.warn(error)
-  // return ''
-  // }
+  try {
+    var contentState = editorState.getCurrentContent();
+    options.contentState = contentState;
+    return (0, _draftConvert.convertToHTML)((0, _configs.getToHTMLConfig)(options))(contentState);
+  } catch (error) {
+    console.warn(error);
+    return '';
+  }
 };
 
 var convertHTMLToEditorState = exports.convertHTMLToEditorState = function convertHTMLToEditorState(HTMLString, editorDecorators, options, source) {

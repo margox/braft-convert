@@ -155,7 +155,7 @@ const spreadNodeAttributes = (attributesObject) => {
   attributesObject = attributesObject || {}
   return Object.keys(attributesObject).reduce((attributeString, attributeName) => {
     return `${attributeString} ${attributeName}="${attributesObject[attributeName]}"`
-  }, ' ')
+  }, ' ').replace(/^\s$/, '')
 }
 
 export const defaultFontFamilies = [{
@@ -487,9 +487,10 @@ const htmlToEntity = (options, source) => (nodeName, node, createEntity) => {
   loop && (meta.loop = loop)
   poster && (meta.poster = poster)
 
-  for (let attr of node.attributes) {
-    (ignoredEntityNodeAttributes.indexOf(attr.name) === -1) && (nodeAttributes[attr.name] = attr.value)
-  }
+  node.attributes && Object.keys(node.attributes).forEach((key) => {
+    let attr = node.attributes[key]
+    ignoredEntityNodeAttributes.indexOf(attr.name) === -1 && (nodeAttributes[attr.name] = attr.value);
+  })
 
   if (nodeName === 'a' && !node.querySelectorAll('img').length) {
     let href = node.getAttribute('href')
@@ -544,9 +545,10 @@ const htmlToBlock = (options, source) => (nodeName, node) => {
   let nodeAttributes = {}
   let nodeStyle = node.style || {}
 
-  for (let attr of node.attributes) {
-    (ignoredNodeAttributes.indexOf(attr.name) === -1) && (nodeAttributes[attr.name] = attr.value)
-  }
+  node.attributes && Object.keys(node.attributes).forEach((key) => {
+    let attr = node.attributes[key]
+    ignoredNodeAttributes.indexOf(attr.name) === -1 && (nodeAttributes[attr.name] = attr.value);
+  })
 
   if (node.classList && node.classList.contains('media-wrap')) {
 

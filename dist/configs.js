@@ -174,7 +174,7 @@ var spreadNodeAttributes = function spreadNodeAttributes(attributesObject) {
   attributesObject = attributesObject || {};
   return Object.keys(attributesObject).reduce(function (attributeString, attributeName) {
     return attributeString + " " + attributeName + "=\"" + attributesObject[attributeName] + "\"";
-  }, ' ');
+  }, ' ').replace(/^\s$/, '');
 };
 
 var defaultFontFamilies = exports.defaultFontFamilies = [{
@@ -336,15 +336,7 @@ var entityToHTML = function entityToHTML(options) {
     }
 
     if (entityType === 'link') {
-<<<<<<< HEAD
-      return _react2.default.createElement(
-        "a",
-        { href: entity.data.href, target: entity.data.target },
-        _react2.default.createElement("span", { dangerouslySetInnerHTML: { __html: originalText } })
-      );
-=======
       return _react2.default.createElement("a", _extends({ href: entity.data.href, target: entity.data.target }, entity.data.nodeAttributes));
->>>>>>> 1438430269bb0219a0b70d94eaa909a94115aac1
     }
   };
 };
@@ -541,9 +533,7 @@ var htmlToEntity = function htmlToEntity(options, source) {
         controls = node.controls,
         autoplay = node.autoplay,
         loop = node.loop,
-        poster = node.poster,
-        href = node.href,
-        target = node.target;
+        poster = node.poster;
 
     var meta = {};
     var nodeAttributes = {};
@@ -556,32 +546,14 @@ var htmlToEntity = function htmlToEntity(options, source) {
     loop && (meta.loop = loop);
     poster && (meta.poster = poster);
 
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-      for (var _iterator = node.attributes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var attr = _step.value;
-
-        ignoredEntityNodeAttributes.indexOf(attr.name) === -1 && (nodeAttributes[attr.name] = attr.value);
-      }
-    } catch (err) {
-      _didIteratorError = true;
-      _iteratorError = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion && _iterator.return) {
-          _iterator.return();
-        }
-      } finally {
-        if (_didIteratorError) {
-          throw _iteratorError;
-        }
-      }
-    }
+    node.attributes && Object.keys(node.attributes).forEach(function (key) {
+      var attr = node.attributes[key];
+      ignoredEntityNodeAttributes.indexOf(attr.name) === -1 && (nodeAttributes[attr.name] = attr.value);
+    });
 
     if (nodeName === 'a' && !node.querySelectorAll('img').length) {
+      var href = node.getAttribute('href');
+      var target = node.getAttribute('target');
       return createEntity('LINK', 'MUTABLE', { href: href, target: target, nodeAttributes: nodeAttributes });
     } else if (nodeName === 'audio') {
       return createEntity('AUDIO', 'IMMUTABLE', { url: node.getAttribute('src'), meta: meta, nodeAttributes: nodeAttributes });
@@ -601,8 +573,8 @@ var htmlToEntity = function htmlToEntity(options, source) {
       height && (entityData.height = height);
 
       if (parentNode.nodeName.toLowerCase() === 'a') {
-        entityData.link = parentNode.href;
-        entityData.link_target = parentNode.target;
+        entityData.link = parentNode.getAttribute('href');
+        entityData.link_target = parentNode.getAttribute('target');
       }
 
       return createEntity('IMAGE', 'IMMUTABLE', entityData);
@@ -634,30 +606,10 @@ var htmlToBlock = function htmlToBlock(options, source) {
     var nodeAttributes = {};
     var nodeStyle = node.style || {};
 
-    var _iteratorNormalCompletion2 = true;
-    var _didIteratorError2 = false;
-    var _iteratorError2 = undefined;
-
-    try {
-      for (var _iterator2 = node.attributes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-        var attr = _step2.value;
-
-        ignoredNodeAttributes.indexOf(attr.name) === -1 && (nodeAttributes[attr.name] = attr.value);
-      }
-    } catch (err) {
-      _didIteratorError2 = true;
-      _iteratorError2 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion2 && _iterator2.return) {
-          _iterator2.return();
-        }
-      } finally {
-        if (_didIteratorError2) {
-          throw _iteratorError2;
-        }
-      }
-    }
+    node.attributes && Object.keys(node.attributes).forEach(function (key) {
+      var attr = node.attributes[key];
+      ignoredNodeAttributes.indexOf(attr.name) === -1 && (nodeAttributes[attr.name] = attr.value);
+    });
 
     if (node.classList && node.classList.contains('media-wrap')) {
 
