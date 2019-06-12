@@ -13,6 +13,8 @@ var _react2 = _interopRequireDefault(_react);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
 var namedColors = exports.namedColors = {
   "aliceblue": "#f0f8ff",
   "antiquewhite": "#faebd7",
@@ -233,14 +235,18 @@ var blockNames = blockTypes.map(function (key) {
   return blocks[key];
 });
 
-var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
+var convertAtomicBlock = function convertAtomicBlock(block, contentState, blockNodeAttributes) {
 
   if (!block || !block.key) {
     return _react2.default.createElement("p", null);
   }
 
-  var blockNodeAttributes = block.data.nodeAttributes || {};
   var contentBlock = contentState.getBlockForKey(block.key);
+
+  var className = blockNodeAttributes.class,
+      nodeAttrAsProps = _objectWithoutProperties(blockNodeAttributes, ["class"]);
+
+  nodeAttrAsProps.className = className;
 
   if (!contentBlock) {
     return _react2.default.createElement("p", null);
@@ -287,27 +293,27 @@ var convertAtomicBlock = function convertAtomicBlock(block, contentState) {
         _react2.default.createElement(
           "a",
           { style: { display: 'inline-block' }, href: link, target: link_target },
-          _react2.default.createElement("img", _extends({}, blockNodeAttributes, meta, { src: url, width: width, height: height, style: { width: width, height: height } }))
+          _react2.default.createElement("img", _extends({}, nodeAttrAsProps, meta, { src: url, width: width, height: height, style: { width: width, height: height } }))
         )
       );
     } else {
       return _react2.default.createElement(
         "div",
         { className: "media-wrap image-wrap" + styledClassName, style: imageWrapStyle },
-        _react2.default.createElement("img", _extends({}, blockNodeAttributes, meta, { src: url, width: width, height: height, style: { width: width, height: height } }))
+        _react2.default.createElement("img", _extends({}, nodeAttrAsProps, meta, { src: url, width: width, height: height, style: { width: width, height: height } }))
       );
     }
   } else if (mediaType === 'audio') {
     return _react2.default.createElement(
       "div",
       { className: "media-wrap audio-wrap" },
-      _react2.default.createElement("audio", _extends({ controls: true }, blockNodeAttributes, meta, { src: url }))
+      _react2.default.createElement("audio", _extends({ controls: true }, nodeAttrAsProps, meta, { src: url }))
     );
   } else if (mediaType === 'video') {
     return _react2.default.createElement(
       "div",
       { className: "media-wrap video-wrap" },
-      _react2.default.createElement("video", _extends({ controls: true }, blockNodeAttributes, meta, { src: url, width: width, height: height }))
+      _react2.default.createElement("video", _extends({ controls: true }, nodeAttrAsProps, meta, { src: url, width: width, height: height }))
     );
   } else if (mediaType === 'embed') {
     return _react2.default.createElement(
@@ -336,7 +342,12 @@ var entityToHTML = function entityToHTML(options) {
     }
 
     if (entityType === 'link') {
-      return _react2.default.createElement("a", _extends({ href: entity.data.href, target: entity.data.target }, entity.data.nodeAttributes));
+      var _entity$data$nodeAttr = entity.data.nodeAttributes,
+          className = _entity$data$nodeAttr.class,
+          nodeAttrAsProps = _objectWithoutProperties(_entity$data$nodeAttr, ["class"]);
+
+      nodeAttrAsProps.className = className;
+      return _react2.default.createElement("a", _extends({ href: entity.data.href, target: entity.data.target }, nodeAttrAsProps));
     }
   };
 };
@@ -420,7 +431,7 @@ var blockToHTML = function blockToHTML(options) {
     }
 
     if (blockType === 'atomic') {
-      return convertAtomicBlock(block, attributeString, contentState);
+      return convertAtomicBlock(block, contentState, nodeAttributes);
     } else if (blockType === 'code-block') {
 
       var previousBlock = contentState.getBlockBefore(block.key);
@@ -553,8 +564,8 @@ var htmlToEntity = function htmlToEntity(options, source) {
 
     if (nodeName === 'a' && !node.querySelectorAll('img').length) {
       var href = node.getAttribute('href');
-      var target = node.getAttribute('target');
-      return createEntity('LINK', 'MUTABLE', { href: href, target: target, nodeAttributes: nodeAttributes });
+      var _target = node.getAttribute('target');
+      return createEntity('LINK', 'MUTABLE', { href: href, target: _target, nodeAttributes: nodeAttributes });
     } else if (nodeName === 'audio') {
       return createEntity('AUDIO', 'IMMUTABLE', { url: node.getAttribute('src'), meta: meta, nodeAttributes: nodeAttributes });
     } else if (nodeName === 'video') {

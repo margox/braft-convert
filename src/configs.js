@@ -213,14 +213,16 @@ export const blocks = {
 const blockTypes = Object.keys(blocks)
 const blockNames = blockTypes.map(key => blocks[key])
 
-const convertAtomicBlock = (block, contentState) => {
+const convertAtomicBlock = (block, contentState, blockNodeAttributes) => {
 
   if (!block || !block.key) {
     return <p></p>
   }
 
-  const blockNodeAttributes = block.data.nodeAttributes || {}
   const contentBlock = contentState.getBlockForKey(block.key)
+
+  let { class: className, ...nodeAttrAsProps } = blockNodeAttributes
+  nodeAttrAsProps.className = className
 
   if (!contentBlock) {
     return <p></p>
@@ -255,22 +257,22 @@ const convertAtomicBlock = (block, contentState) => {
       return (
         <div className={"media-wrap image-wrap" + styledClassName} style={imageWrapStyle}>
           <a style={{display:'inline-block'}} href={link} target={link_target}>
-            <img {...blockNodeAttributes} {...meta} src={url} width={width} height={height} style={{width, height}} />
+            <img {...nodeAttrAsProps} {...meta} src={url} width={width} height={height} style={{width, height}} />
           </a>
         </div>
       )
     } else {
       return (
         <div className={"media-wrap image-wrap" + styledClassName} style={imageWrapStyle}>
-          <img {...blockNodeAttributes} {...meta} src={url} width={width} height={height} style={{width, height}}/>
+          <img {...nodeAttrAsProps} {...meta} src={url} width={width} height={height} style={{width, height}}/>
         </div>
       )
     }
 
   } else if (mediaType === 'audio') {
-    return <div className="media-wrap audio-wrap"><audio controls {...blockNodeAttributes} {...meta} src={url} /></div>
+    return <div className="media-wrap audio-wrap"><audio controls {...nodeAttrAsProps} {...meta} src={url} /></div>
   } else if (mediaType === 'video') {
-    return <div className="media-wrap video-wrap"><video controls {...blockNodeAttributes} {...meta} src={url} width={width} height={height} /></div>
+    return <div className="media-wrap video-wrap"><video controls {...nodeAttrAsProps} {...meta} src={url} width={width} height={height} /></div>
   } else if (mediaType === 'embed') {
     return <div className="media-wrap embed-wrap"><div dangerouslySetInnerHTML={{__html: url}}/></div>
   } else if (mediaType === 'hr') {
@@ -294,7 +296,9 @@ const entityToHTML = (options) => (entity, originalText) => {
   }
 
   if (entityType === 'link') {
-    return <a href={entity.data.href} target={entity.data.target} {...entity.data.nodeAttributes}/>
+    let { class: className, ...nodeAttrAsProps } = entity.data.nodeAttributes
+    nodeAttrAsProps.className = className
+    return <a href={entity.data.href} target={entity.data.target} {...nodeAttrAsProps}/>
   }
 
 }
@@ -370,7 +374,7 @@ const blockToHTML = (options) => (block) => {
   }
 
   if (blockType === 'atomic') {
-    return convertAtomicBlock(block, attributeString, contentState)
+    return convertAtomicBlock(block, contentState, nodeAttributes)
   } else if (blockType === 'code-block') {
 
     const previousBlock = contentState.getBlockBefore(block.key)
