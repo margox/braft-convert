@@ -152,10 +152,9 @@ const ignoredNodeAttributes = ['style']
 const ignoredEntityNodeAttributes = ['style', 'href', 'target', 'alt', 'title', 'id', 'controls', 'autoplay', 'loop', 'poster']
 
 const spreadNodeAttributes = (attributesObject) => {
-  attributesObject = attributesObject || {}
   return Object.keys(attributesObject).reduce((attributeString, attributeName) => {
     return `${attributeString} ${attributeName}="${attributesObject[attributeName]}"`
-  }, ' ').replace(/^\s$/, '')
+  }, '').replace(/^\s$/, '')
 }
 
 export const defaultFontFamilies = [{
@@ -296,7 +295,7 @@ const entityToHTML = (options) => (entity, originalText) => {
   }
 
   if (entityType === 'link') {
-    let { class: className, ...nodeAttrAsProps } = entity.data.nodeAttributes
+    let { class: className, ...nodeAttrAsProps } = entity.data.nodeAttributes || {}
     nodeAttrAsProps.className = className
     return <a href={entity.data.href} target={entity.data.target} {...nodeAttrAsProps}/>
   }
@@ -354,7 +353,7 @@ const blockToHTML = (options) => (block) => {
   let blockStyle = ''
 
   const blockType = block.type.toLowerCase()
-  const { textAlign, textIndent, nodeAttributes } = block.data
+  const { textAlign, textIndent, nodeAttributes = {} } = block.data
   const attributeString = spreadNodeAttributes(nodeAttributes)
 
   if (textAlign || textIndent) {
@@ -386,7 +385,7 @@ const blockToHTML = (options) => (block) => {
     let end = ''
 
     if (previousBlockType !== 'code-block') {
-      start = `<pre ${attributeString}><code>`
+      start = `<pre${attributeString}><code>`
     } else {
       start = ''
     }

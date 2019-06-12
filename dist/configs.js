@@ -173,10 +173,9 @@ var ignoredNodeAttributes = ['style'];
 var ignoredEntityNodeAttributes = ['style', 'href', 'target', 'alt', 'title', 'id', 'controls', 'autoplay', 'loop', 'poster'];
 
 var spreadNodeAttributes = function spreadNodeAttributes(attributesObject) {
-  attributesObject = attributesObject || {};
   return Object.keys(attributesObject).reduce(function (attributeString, attributeName) {
     return attributeString + " " + attributeName + "=\"" + attributesObject[attributeName] + "\"";
-  }, ' ').replace(/^\s$/, '');
+  }, '').replace(/^\s$/, '');
 };
 
 var defaultFontFamilies = exports.defaultFontFamilies = [{
@@ -342,9 +341,9 @@ var entityToHTML = function entityToHTML(options) {
     }
 
     if (entityType === 'link') {
-      var _entity$data$nodeAttr = entity.data.nodeAttributes,
-          className = _entity$data$nodeAttr.class,
-          nodeAttrAsProps = _objectWithoutProperties(_entity$data$nodeAttr, ["class"]);
+      var _ref = entity.data.nodeAttributes || {},
+          className = _ref.class,
+          nodeAttrAsProps = _objectWithoutProperties(_ref, ["class"]);
 
       nodeAttrAsProps.className = className;
       return _react2.default.createElement("a", _extends({ href: entity.data.href, target: entity.data.target }, nodeAttrAsProps));
@@ -411,7 +410,8 @@ var blockToHTML = function blockToHTML(options) {
     var _block$data2 = block.data,
         textAlign = _block$data2.textAlign,
         textIndent = _block$data2.textIndent,
-        nodeAttributes = _block$data2.nodeAttributes;
+        _block$data2$nodeAttr = _block$data2.nodeAttributes,
+        nodeAttributes = _block$data2$nodeAttr === undefined ? {} : _block$data2$nodeAttr;
 
     var attributeString = spreadNodeAttributes(nodeAttributes);
 
@@ -443,7 +443,7 @@ var blockToHTML = function blockToHTML(options) {
       var end = '';
 
       if (previousBlockType !== 'code-block') {
-        start = "<pre " + attributeString + "><code>";
+        start = "<pre" + attributeString + "><code>";
       } else {
         start = '';
       }
