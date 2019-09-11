@@ -492,7 +492,7 @@ const htmlToEntity = (options, source) => (nodeName, node, createEntity) => {
 
   node.attributes && Object.keys(node.attributes).forEach((key) => {
     let attr = node.attributes[key]
-    ignoredEntityNodeAttributes.indexOf(attr.name) === -1 && (nodeAttributes[attr.name] = attr.value);
+    !!attr && ignoredEntityNodeAttributes.indexOf(attr.name) === -1 && (nodeAttributes[attr.name] = attr.value);
   })
 
   if (nodeName === 'a' && !node.querySelectorAll('img').length) {
@@ -550,7 +550,7 @@ const htmlToBlock = (options, source) => (nodeName, node) => {
 
   node.attributes && Object.keys(node.attributes).forEach((key) => {
     let attr = node.attributes[key]
-    ignoredNodeAttributes.indexOf(attr.name) === -1 && (nodeAttributes[attr.name] = attr.value);
+    !!attr && ignoredNodeAttributes.indexOf(attr.name) === -1 && (nodeAttributes[attr.name] = attr.value);
   })
 
   if (node.classList && node.classList.contains('media-wrap')) {
