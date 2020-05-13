@@ -328,7 +328,7 @@ const styleToHTML = (options) => (style) => {
   } else if (style.indexOf('fontsize-') === 0) {
     return <span style={{fontSize: unitExportFn(getStyleValue(style), 'font-size', 'html')}}/>
   } else if (style.indexOf('lineheight-') === 0) {
-    return <span style={{lineHeight: unitExportFn(getStyleValue(style), 'line-height', 'html')}}/> 
+    return <span style={{lineHeight: unitExportFn(getStyleValue(style), 'line-height', 'html')}}/>
   } else if (style.indexOf('letterspacing-') === 0) {
     return <span style={{letterSpacing: unitExportFn(getStyleValue(style), 'letter-spacing', 'html')}}/>
   } else if (style.indexOf('fontfamily-') === 0) {
@@ -492,6 +492,7 @@ const htmlToEntity = (options, source) => (nodeName, node, createEntity) => {
 
   node.attributes && Object.keys(node.attributes).forEach((key) => {
     let attr = node.attributes[key]
+    if(!attr) return
     ignoredEntityNodeAttributes.indexOf(attr.name) === -1 && (nodeAttributes[attr.name] = attr.value);
   })
 
@@ -500,9 +501,9 @@ const htmlToEntity = (options, source) => (nodeName, node, createEntity) => {
     let target = node.getAttribute('target')
     return createEntity('LINK', 'MUTABLE',{ href, target, nodeAttributes })
   } else if (nodeName === 'audio') {
-    return createEntity('AUDIO', 'IMMUTABLE',{ url: node.getAttribute('src'), meta, nodeAttributes }) 
+    return createEntity('AUDIO', 'IMMUTABLE',{ url: node.getAttribute('src'), meta, nodeAttributes })
   } else if (nodeName === 'video') {
-    return createEntity('VIDEO', 'IMMUTABLE',{ url: node.getAttribute('src'), meta, nodeAttributes }) 
+    return createEntity('VIDEO', 'IMMUTABLE',{ url: node.getAttribute('src'), meta, nodeAttributes })
   } else if (nodeName === 'img') {
 
     let parentNode = node.parentNode
@@ -518,10 +519,10 @@ const htmlToEntity = (options, source) => (nodeName, node, createEntity) => {
       entityData.link_target = parentNode.getAttribute('target')
     }
 
-    return createEntity('IMAGE', 'IMMUTABLE', entityData) 
+    return createEntity('IMAGE', 'IMMUTABLE', entityData)
 
   } else if (nodeName === 'hr') {
-    return createEntity('HR', 'IMMUTABLE', {}) 
+    return createEntity('HR', 'IMMUTABLE', {})
   } else if (node.parentNode && node.parentNode.classList.contains('embed-wrap')) {
 
     const embedContent = node.innerHTML || node.outerHTML
@@ -529,7 +530,7 @@ const htmlToEntity = (options, source) => (nodeName, node, createEntity) => {
     if (embedContent) {
       return createEntity('EMBED', 'IMMUTABLE', {
         url: embedContent
-      })   
+      })
     }
 
   }
@@ -550,6 +551,7 @@ const htmlToBlock = (options, source) => (nodeName, node) => {
 
   node.attributes && Object.keys(node.attributes).forEach((key) => {
     let attr = node.attributes[key]
+    if(!attr) return
     ignoredNodeAttributes.indexOf(attr.name) === -1 && (nodeAttributes[attr.name] = attr.value);
   })
 
@@ -624,7 +626,7 @@ export const getToHTMLConfig = (options) => {
 
 export const getFromHTMLConfig = (options, source = 'unknow') => {
 
-  return { 
+  return {
     htmlToStyle: htmlToStyle(options, source),
     htmlToEntity: htmlToEntity(options, source),
     htmlToBlock: htmlToBlock(options, source)
