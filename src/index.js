@@ -26,7 +26,7 @@ export const convertHTMLToRaw = (HTMLString, options, source) => {
   options = { ...defaultConvertOptions, ...options }
 
   try {
-    const contentState = convertFromHTML(getFromHTMLConfig(options, source))(HTMLString)
+    const contentState = convertFromHTML(getFromHTMLConfig(options, source))(HTMLString, options)
     return convertToRaw(contentState)
   } catch (error) {
     console.warn(error)
@@ -55,7 +55,7 @@ export const convertHTMLToEditorState = (HTMLString, editorDecorators, options, 
   options = { ...defaultConvertOptions, ...options }
 
   try {
-    return EditorState.createWithContent(convertFromHTML(getFromHTMLConfig(options, source))(HTMLString), editorDecorators)
+    return EditorState.createWithContent(convertFromHTML(getFromHTMLConfig(options, source))(HTMLString, options), editorDecorators)
   } catch (error) {
     console.warn(error)
     return EditorState.createEmpty(editorDecorators)
